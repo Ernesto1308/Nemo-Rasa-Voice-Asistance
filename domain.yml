@@ -1,0 +1,54 @@
+version: '3.1'
+intents:
+- affirm
+- consult_an_specific_medication
+- consult_medications
+- deny
+- greet
+- mood_bad
+- mood_great
+- tell_time
+entities:
+- medication
+- hour
+- name
+slots:
+  medicine:
+    type: text
+    influence_conversation: true
+    mappings:
+    - type: from_entity
+      entity: medication
+  medicines:
+    type: list
+    mappings:
+    - type: from_entity
+      entity: medication
+  user_name:
+    type: text
+    mappings:
+    - type: from_entity
+      entity: name
+responses:
+  utter_greet:
+  - text: Hola
+  - text: Hola. ¿Cómo estas?
+  utter_great:
+  - text: Me alegro mucho
+  - text: Que bueno
+  utter_bad:
+  - text: ¿Quieres que le avise a alguien?
+  utter_ok:
+  - text: Esta bien.
+actions:
+- action_consult_an_specific_medication
+- utter_greet
+- utter_great
+- utter_ok
+- utter_bad
+- action_tell_time
+- action_consult_medications
+- action_call_responsible
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

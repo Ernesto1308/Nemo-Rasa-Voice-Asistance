@@ -1,0 +1,50 @@
+version: "3.1"
+nlu:
+- intent: greet
+  examples: |
+    - Hola
+    - Que tal
+- intent: consult_medications
+  examples: |
+    - ¿Qué [pastilla](medication) tengo que tomarme?
+    - ¿Qué [pastilla](medication) me toca ahora?
+- intent: consult_an_specific_medication
+  examples: |
+    - ¿A qué hora tengo que tomarme el [Paracetamol](medication)?
+    - ¿A qué hora tengo que tomarme la [Duralgina](medication)?
+    - ¿A qué hora tengo que tomarme la [Venadrilina](medication)?
+    - ¿A qué hora tengo que tomarme el [Ibuprofeno](medication)?
+    - ¿A qué hora tengo que tomarme el [Paracetamol](medication), la [Duralgina](medication) y el [Ibuprofeno](medication)?
+    - ¿A qué hora tengo que tomarme el [Paracetamol](medication)?
+- intent: tell_time
+  examples: |
+    - Dime la [hora](hour)
+    - ¿Qué [hora](hour) es?
+    - Hora
+    - me puedes decir la hora
+    - hora
+    - dime la [hora](hour)
+- intent: affirm
+  examples: |
+    - Si
+    - Esta bien
+- intent: deny
+  examples: |
+    - no
+    - no es necesario
+    - no hace falta
+- intent: mood_great
+  examples: |
+    - perfecto
+    - bien
+    - genial
+    - estoy bien
+- intent: mood_bad
+  examples: |
+    - no me siento bien
+    - estoy mal
+    - mal
+    - me siento mal
+- synonym: medicamento
+  examples: |
+    - pastilla

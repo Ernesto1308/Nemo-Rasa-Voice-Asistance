@@ -1,0 +1,19 @@
+{
+  "lookup": {
+    "eJyLrq6NBQAEOAGx": "action_listen",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohNz8/JT4pMaW2NhYAPhkcow==": "utter_bad",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohNz8/JT4pMaWWgDGlJSWpRWCFeIyIBQAQxDXj": "action_listen",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohNz8/JT4pMaWWgDGlJSWpRWCFZBtBwCUpqXmVtbWxAITgT1A=": "utter_ok",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohNz8/JT4pMaWWgDGlJSWpRWCFZBtBwCUpqXmVxLkiPxuX7lgAlwlmvg==": "action_listen",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taS2NhYA6dwbhQ==": "utter_greet",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taSWgBmlJSWpRfEQpbhMiAUAQvc0lw==": "action_listen",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taSWgBmlJSWpRfEQpeSZQMAVufn5KSDzE4EGxQIAPEFQdQ==": "utter_great",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohvSg1taSWgBmlJSWpRfEQpeSZQMAVufn5KSDzE4l3SiIWpyAbEwsAUMNrjQ==": "action_listen",
+    "eJydjkEKhDAMRa/SA8wJehUZQohxCNhU2tRN6d2nokuh4i4fXh5vqu3j6pZ4BySTqN7V8wDFwN5dY5VsrJ0tmVNnRPs0736J2drAUcw4wYm+MwwqQozz4cfnKXiT8lwz6KGouawGqJA3JlmEIPAshMdba98/4PiPoQ==": "consult_an_specific_medication",
+    "eJydjkEKwzAMBL/iB/QF/kopQihKEcRysOVcTP5eh/RYUNKbFnZH8+z7I/S18AZIJllj6OcBiolj+IZFqrGObqtcRkd0RIvhXZhtdxjNjAuc1f8IjkXKeTr4eF0Ff6hcxzg+lLW2xQAV6soksxAknoTwmHlwZ3372+sDyRa6oA==": "action_listen",
+    "eJyLrq7VUaguKEoti09MLsnMz7NSqIYw4vMSc1OtFKCcnMziktQ8oNrS4tQioJrMPCC3xEohNz8/JT4pMaWWgDGlJSWpRWCFZBtBwCWJaWmZRbm1tbEAJCRQFQ==": "action_call_responsible",
+    "eJydjlEKgCAQBa/iATqBV4mQNTdY0DXWtR/p7kn1G0V/b2AY3tj2wbRVcHMwK2W2pl3DMSS05oZIRZG7WwtKd4g7qjUp5+A8hP0lU1VRTvF34uUJLAtJ+hiZIUYnWNbMhXzE59x0AIzvblk=": "action_listen",
+    "eJydjsEJwCAQBFuxgFRgKyHIoUcQ9Ax65iP2HsU8A0p+uzAMs5e6iXJFvBVotoGkKGMoAo9SvMfZxEiNzQljYyy1y1KcEZHrxJGZMaqB/jNMKnwIpvthPQU+UtY1kx4dKGXHyqOxGjqaaj0ezVGLQQ==": "consult_an_specific_medication",
+    "eJydjkEKAjEMRa/SA3iCXkUkhEyUwDQdmtRNmbvbYRRcCC3u8uH9l39t+yW0rfATkFyyxtDOAxQTx/AOq5izdrYal86I9ugxPAqz7wNHdecCJ/qfYbAi5bwcfpyfgj+mzGsGeyir1dUh8SKEB2oj46eCCrYxyV3oqz754vYCF4ax4A==": "action_listen"
+  }
+}

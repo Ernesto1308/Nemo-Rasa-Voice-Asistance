@@ -1,0 +1,72 @@
+version: "3.1"
+
+stories:
+
+- story: happy path 1
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: mood_great
+  - action: utter_great
+  - or:
+    - intent: consult_medications
+    - intent: consult_an_specific_medication
+  - action: action_consult_an_specific_medication
+
+- story: happy path 2
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: mood_great
+  - action: utter_great
+
+- story: ask if we need to call someone 1
+  steps:
+  - intent: mood_bad
+  - action: utter_bad
+  - intent: affirm
+  - action: action_call_responsible
+
+- story: ask if we need to call someone 2
+  steps:
+  - intent: mood_bad
+  - action: utter_bad
+  - intent: deny
+  - action: utter_ok
+- story: interactive_story_1
+  steps:
+  - intent: consult_an_specific_medication
+  - action: action_consult_an_specific_medication
+
+- story: interactive_story_1
+  steps:
+  - intent: consult_an_specific_medication
+  - intent: consult_an_specific_medication
+    entities:
+    - medication: Paracetamol
+  - action: action_consult_an_specific_medication
+
+- story: interactive_story_1
+  steps:
+  - intent: consult_an_specific_medication
+    entities:
+    - medication: Paracetamol
+  - slot_was_set:
+    - medicine: Paracetamol
+  - slot_was_set:
+    - medicines:
+      - Paracetamol
+  - action: action_consult_an_specific_medication
+  - intent: affirm
+
+- story: interactive_story_1
+  steps:
+  - intent: consult_an_specific_medication
+    entities:
+    - medication: Paracetamol
+  - slot_was_set:
+    - medicine: Paracetamol
+  - slot_was_set:
+    - medicines:
+      - Paracetamol
+  - action: action_consult_an_specific_medication
