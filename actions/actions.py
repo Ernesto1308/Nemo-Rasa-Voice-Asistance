@@ -1,14 +1,16 @@
 # This files contains your custom actions which can be used to run
 # custom Python code.
-import base64
+from datetime import datetime, timedelta
 from typing import Any, Text, Dict, List
-from rasa_sdk import Action, Tracker
-from rasa_sdk.executor import CollectingDispatcher
-from datetime import datetime
-from actions import numbers
-from acces_data_layer.services.r_old_person_medicine_service import select_by_ids_hour
-from acces_data_layer.services.medicine_service import select_by_name
+
 import spacy
+from rasa_sdk import Action, Tracker
+from rasa_sdk.events import SlotSet
+from rasa_sdk.executor import CollectingDispatcher
+
+from acces_data_layer.services.medicine_service import select_by_name
+from acces_data_layer.services.r_old_person_medicine_service import select_by_ids_hour, select_by_op_id
+from actions import numbers
 
 
 def tell_time(hour_to_convert: datetime) -> str:
@@ -72,6 +74,28 @@ def get_gender(noun: str) -> str:
     return gender
 
 
+def sentence_builder(medicine: str, medication_hour: datetime, message: str) -> str:
+    """
+    Constructs a phrase in Spanish mentioning a medicine and when to take it.
+
+    Args:
+        medicine: The name of the medicine.
+        medication_hour: The date and time when the medicine should be taken.
+        message: The initial message string.
+
+    Returns:
+        The initial message string with an additional phrase appended
+        mentioning the medicine name, time to take it, and proper Spanish
+        gender article.
+    """
+
+    gender = get_gender(medicine)
+    article = "" if not gender else "la" if gender == "Fem" else "el"
+    message += f"Tienes que tomar {article} {medicine} a {tell_time(medication_hour)}. "
+
+    return message
+
+
 class ActionTellTime(Action):
     def name(self) -> Text:
         return "action_tell_time"
@@ -92,26 +116,29 @@ class ActionSpecificMedication(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         id_old_person = int(tracker.sender_id)
-        current_medicine = next(tracker.get_latest_entity_values("medication"), None)
+        current_medicines = tracker.get_slot("medicines")
+        message = ""
 
-        if current_medicine:
-            id_medicine = select_by_name(medicine=current_medicine)
-            gender = get_gender(current_medicine)
-            current_hour = datetime.now()
-            medication_hour = select_by_ids_hour(op_id=id_old_person, med_id=id_medicine, hour=current_hour)
-            print(gender)
+        if current_medicines:
+            for medicine in current_medicines:
+                id_medicine = select_by_name(medicine=medicine)
 
-            if medication_hour:
-                article = "" if not gender else "la" if gender == "Fem" else "el"
-                message = f"Tienes que tomar {article} {current_medicine} a {tell_time(medication_hour)}"
-            else:
-                message = f"No tienes que tomar {current_medicine} hoy"
+                if id_medicine:
+                    current_hour = datetime.now()
+                    medication_hour = select_by_ids_hour(id_op=id_old_person, id_med=id_medicine, hour=current_hour)
+
+                    if medication_hour:
+                        message = sentence_builder(medicine=medicine, medication_hour=medication_hour, message=message)
+                    else:
+                        message += f"No tienes que tomar {medicine} hoy. "
+                else:
+                    message += f"No conozco la medicina {medicine}. "
         else:
-            message = "No conozco esa medicina"
+            message += f"No conozco esa medicina."
 
         dispatcher.utter_message(text=message)
 
-        return []
+        return [SlotSet("medicines", None)]
 
 
 class ActionConsultMedications(Action):
@@ -121,10 +148,17 @@ class ActionConsultMedications(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        # medication = next(tracker.get_latest_entity_values("medication"), None)
-        # medication = tracker.get_slot("medicines")
-        current_medicine = tracker.get_latest_entity_values("medicine")
+        id_old_person = int(tracker.sender_id)
+        message = ""
+        current_hour = datetime.now()
+        end_hour = current_hour + timedelta(hours=12)
+        current_medicines = select_by_op_id(
+            id_op=id_old_person, start_hour=current_hour, end_hour=end_hour
+        )
 
-        # dispatcher.utter_message(text=f"A las {medication}")
+        for medicine_name, medicine_hour in current_medicines:
+            message = sentence_builder(medicine=medicine_name, medication_hour=medicine_hour, message=message)
+
+        dispatcher.utter_message(text=message)
 
         return []

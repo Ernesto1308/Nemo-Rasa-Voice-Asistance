@@ -8,10 +8,8 @@ stories:
   - action: utter_greet
   - intent: mood_great
   - action: utter_great
-  - or:
-    - intent: consult_medications
-    - intent: consult_an_specific_medication
-  - action: action_consult_an_specific_medication
+  - intent: consult_medications
+  - action: action_consult_medications
 
 - story: happy path 2
   steps:
@@ -33,40 +31,3 @@ stories:
   - action: utter_bad
   - intent: deny
   - action: utter_ok
-- story: interactive_story_1
-  steps:
-  - intent: consult_an_specific_medication
-  - action: action_consult_an_specific_medication
-
-- story: interactive_story_1
-  steps:
-  - intent: consult_an_specific_medication
-  - intent: consult_an_specific_medication
-    entities:
-    - medication: Paracetamol
-  - action: action_consult_an_specific_medication
-
-- story: interactive_story_1
-  steps:
-  - intent: consult_an_specific_medication
-    entities:
-    - medication: Paracetamol
-  - slot_was_set:
-    - medicine: Paracetamol
-  - slot_was_set:
-    - medicines:
-      - Paracetamol
-  - action: action_consult_an_specific_medication
-  - intent: affirm
-
-- story: interactive_story_1
-  steps:
-  - intent: consult_an_specific_medication
-    entities:
-    - medication: Paracetamol
-  - slot_was_set:
-    - medicine: Paracetamol
-  - slot_was_set:
-    - medicines:
-      - Paracetamol
-  - action: action_consult_an_specific_medication

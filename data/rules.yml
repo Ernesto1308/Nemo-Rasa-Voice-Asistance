@@ -5,3 +5,8 @@ rules:
   steps:
   - intent: tell_time
   - action: action_tell_time
+
+- rule: consult medication
+  steps:
+    - intent: consult_an_specific_medication
+    - action: action_consult_an_specific_medication

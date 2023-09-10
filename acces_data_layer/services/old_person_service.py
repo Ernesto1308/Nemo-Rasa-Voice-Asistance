@@ -20,7 +20,7 @@ def insert(old_person: OldPerson):
         session.commit()
 
 
-def select() -> List[Type[OldPerson]]:
+def select_all() -> List[Type[OldPerson]]:
     """
     Returns all the old persons from the database.
 
