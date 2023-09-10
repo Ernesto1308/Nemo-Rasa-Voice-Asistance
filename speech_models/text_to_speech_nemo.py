@@ -1,27 +1,35 @@
+import base64
+import json
+
 import soundfile as sf
+from flask import Flask, request
 from nemo.collections.tts.models import FastPitchModel
 from nemo.collections.tts.models import HifiGanModel
-from mqtt_provider import MqttPublisher, MqttSubscriber
-from utils import read_audio
+
+from utils import read_audio, time
+
+app = Flask(__name__)
 
 
-def on_message(client, userdata, message):
-    payload_decoded = message.payload.decode('utf-8')
-    mqtt_publish = MqttPublisher('localhost', 'TextToSpeech Module Output', 'audio/text_to_speech_output')
-    parsed = spec_generator.parse(payload_decoded, normalize=False)
+@app.route('/audio/text_to_speech_input', methods=['POST'])
+def on_request():
+    print('Solicitud recibida', time())
+    data = request.get_data(as_text=True)
+    parsed = spec_generator.parse(data, normalize=False)
     speaker = 1
     spectrogram = spec_generator.generate_spectrogram(tokens=parsed, speaker=speaker)
     audio = model.convert_spectrogram_to_audio(spec=spectrogram)
     audio = audio.detach().cpu().numpy()[0]
     sample_rate = 44100
     sf.write('../audios/speech.wav', audio, sample_rate)
-    mqtt_publish.publish(read_audio('../audios/speech.wav'))
+    data = base64.b64encode(read_audio('../audios/speech.wav')).decode('utf-8')
+    print('Enviando respuesta', time())
+    return json.dumps({"audio": data}), 200
 
 
-fastpitch_name = "tts_es_fastpitch_multispeaker"
-hifigan_name = "tts_es_hifigan_ft_fastpitch_multispeaker"
-spec_generator = FastPitchModel.from_pretrained(fastpitch_name)
-model = HifiGanModel.from_pretrained(hifigan_name)
-mqtt_subscribe = MqttSubscriber('localhost', 'TextToSpeech Module Input', 'audio/text_to_speech_input')
-mqtt_subscribe.client.on_message = on_message
-mqtt_subscribe.subscribe()
+if __name__ == '__main__':
+    fastpitch_name = "tts_es_fastpitch_multispeaker"
+    hifigan_name = "tts_es_hifigan_ft_fastpitch_multispeaker"
+    spec_generator = FastPitchModel.from_pretrained(fastpitch_name)
+    model = HifiGanModel.from_pretrained(hifigan_name)
+    app.run(host='0.0.0.0', port=8002)

@@ -1,15 +1,19 @@
-import nemo.collections.asr as nemo_asr
 import json
-import base64
-from speech_models.mqtt_provider import MqttSubscriber, MqttPublisher
-from utils import write_audio, time
+
+import nemo.collections.asr as nemo_asr
+from flask import Flask, request
+
 from acces_data_layer.services import old_person_service
+from utils import write_audio, time
+
+app = Flask(__name__)
 
 
-def on_message(client, userdata, message):
+@app.route('/audio/verification_input', methods=['POST'])
+def on_request():
     print('Solicitud recibida', time())
-    payload_decoded = eval(message.payload.decode('utf-8'))
-    unknown_speaker_bytes = bytes(payload_decoded['unknown_speaker'])
+    data = request.get_json()
+    unknown_speaker_bytes = bytes(data['unknown_speaker'])
     write_audio(unknown_speaker_bytes, '../audios/unknown_speaker.wav')
     authenticated_op = None
     old_person_list = old_person_service.select()
@@ -21,18 +25,15 @@ def on_message(client, userdata, message):
             authenticated_op = current_old_person
             break
 
-    mqtt_publisher = MqttPublisher('localhost', 'Verification Module Output', 'audio/verification_output')
-
+    print('Enviando respuesta', time())
     if authenticated_op:
         authenticated_op = authenticated_op.to_dict()
-        unknown_speaker_string = base64.b64encode(unknown_speaker_bytes).decode('utf-8')
-        authenticated_op['audio'] = unknown_speaker_string
-        mqtt_publisher.publish(json.dumps(authenticated_op))
+        authenticated_op['audio'] = data['unknown_speaker']
+        return json.dumps(authenticated_op), 200
     else:
-        mqtt_publisher.publish()
+        return json.dumps({"id_old_person": 0}), 200
 
 
-speaker_model = nemo_asr.models.EncDecSpeakerLabelModel.from_pretrained(model_name='titanet_large')
-mqtt_subscriber = MqttSubscriber('localhost', 'Verification Module Input', 'audio/verification_input')
-mqtt_subscriber.client.on_message = on_message
-mqtt_subscriber.subscribe()
+if __name__ == '__main__':
+    speaker_model = nemo_asr.models.EncDecSpeakerLabelModel.from_pretrained(model_name='titanet_large')
+    app.run(host='0.0.0.0', port=8000)
