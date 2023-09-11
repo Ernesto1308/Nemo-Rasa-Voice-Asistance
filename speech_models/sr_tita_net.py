@@ -1,4 +1,5 @@
 import json
+import threading
 
 import nemo.collections.asr as nemo_asr
 from flask import Flask, request
@@ -16,7 +17,7 @@ def on_request():
     unknown_speaker_bytes = bytes(data['unknown_speaker'])
     write_audio(unknown_speaker_bytes, '../audios/unknown_speaker.wav')
     authenticated_op = None
-    old_person_list = old_person_service.select()
+    old_person_list = old_person_service.select_all()
 
     for current_old_person in old_person_list:
         write_audio(current_old_person.audio, '../audios/known_speaker.wav')
