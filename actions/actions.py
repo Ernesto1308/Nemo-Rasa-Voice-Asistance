@@ -74,24 +74,54 @@ def get_gender(noun: str) -> str:
     return gender
 
 
-def sentence_builder(medicine: str, medication_hour: datetime, message: str) -> str:
+def sentence_builder(
+        dict_message: dict,
+        index_value: str,
+        medicine: str,
+        medication_hour: datetime = None
+) -> dict:
     """
     Constructs a phrase in Spanish mentioning a medicine and when to take it.
 
     Args:
+        dict_message: The name of the medicine.
+        index_value: The name of the medicine.
         medicine: The name of the medicine.
         medication_hour: The date and time when the medicine should be taken.
-        message: The initial message string.
 
     Returns:
         The initial message string with an additional phrase appended
         mentioning the medicine name, time to take it, and proper Spanish
         gender article.
     """
-
     gender = get_gender(medicine)
-    article = "" if not gender else "la" if gender == "Fem" else "el"
-    message += f"Tienes que tomar {article} {medicine} a {tell_time(medication_hour)}. "
+    article = "" if not gender else "la " if gender == "Fem" else "el "
+
+    if index_value == "take":
+        if dict_message[index_value]:
+            dict_message[index_value].append(f"{article}{medicine} a {tell_time(medication_hour)}")
+        else:
+            dict_message[index_value] = [f"Tienes que tomar{article} {medicine} a {tell_time(medication_hour)}"]
+    else:
+        if dict_message[index_value]:
+            dict_message[index_value] += f", ni {medicine}"
+        elif index_value == "not_take":
+            dict_message[index_value] = f"No tines que tomar {medicine}"
+        else:
+            dict_message[index_value] = f"No conozco la medicina {medicine}"
+
+    return dict_message
+
+
+def sentence_finisher(sentences: List) -> str:
+    message = ""
+    length = len(sentences)
+
+    for i, sentence in enumerate(iterable=sentences, start=1):
+        if i != length:
+            message += f"{sentence}, "
+        else:
+            message += f"y {sentence}"
 
     return message
 
@@ -115,9 +145,14 @@ class ActionSpecificMedication(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        id_old_person = int(tracker.sender_id)
+        # id_old_person = int(tracker.sender_id)
+        id_old_person = 5
         current_medicines = tracker.get_slot("medicines")
-        message = ""
+        dict_message = {
+            "take": [],
+            "not_take": '',
+            "unknown": ''
+        }
 
         if current_medicines:
             for medicine in current_medicines:
@@ -128,13 +163,31 @@ class ActionSpecificMedication(Action):
                     medication_hour = select_by_ids_hour(id_op=id_old_person, id_med=id_medicine, hour=current_hour)
 
                     if medication_hour:
-                        message = sentence_builder(medicine=medicine, medication_hour=medication_hour, message=message)
+                        dict_message = sentence_builder(
+                            dict_message=dict_message,
+                            index_value="take",
+                            medicine=medicine,
+                            medication_hour=medication_hour
+                        )
                     else:
-                        message += f"No tienes que tomar {medicine} hoy. "
+                        dict_message = sentence_builder(
+                            dict_message=dict_message,
+                            index_value="not_take",
+                            medicine=medicine
+                        )
                 else:
-                    message += f"No conozco la medicina {medicine}. "
+                    dict_message = sentence_builder(
+                        dict_message=dict_message,
+                        index_value="unknown",
+                        medicine=medicine
+                    )
+
+            message = sentence_finisher(sentences=dict_message["take"])
+
+            message += dict_message["not_take"] + " hoy"
+            message += dict_message["unknown"]
         else:
-            message += f"No conozco esa medicina."
+            message = f"No conozco esa medicina."
 
         dispatcher.utter_message(text=message)
 
@@ -148,16 +201,26 @@ class ActionConsultMedications(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        id_old_person = int(tracker.sender_id)
-        message = ""
+        # id_old_person = int(tracker.sender_id)
+        id_old_person = 5
+        dict_message = {
+            "take": []
+        }
         current_hour = datetime.now()
         end_hour = current_hour + timedelta(hours=12)
         current_medicines = select_by_op_id(
             id_op=id_old_person, start_hour=current_hour, end_hour=end_hour
         )
 
-        for medicine_name, medicine_hour in current_medicines:
-            message = sentence_builder(medicine=medicine_name, medication_hour=medicine_hour, message=message)
+        for medicine, medication_hour in current_medicines:
+            dict_message = sentence_builder(
+                dict_message=dict_message,
+                index_value="take",
+                medicine=medicine,
+                medication_hour=medication_hour
+            )
+
+        message = sentence_finisher(sentences=dict_message["take"])
 
         dispatcher.utter_message(text=message)
 
