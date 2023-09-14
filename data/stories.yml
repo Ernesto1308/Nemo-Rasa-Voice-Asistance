@@ -23,7 +23,6 @@ stories:
   - intent: mood_bad
   - action: utter_bad
   - intent: affirm
-  - action: action_call_responsible
 
 - story: ask if we need to call someone 2
   steps:
@@ -31,3 +30,8 @@ stories:
   - action: utter_bad
   - intent: deny
   - action: utter_ok
+
+- story: interactive_story_1
+  steps:
+  - intent: consult_medications
+  - action: action_consult_medications

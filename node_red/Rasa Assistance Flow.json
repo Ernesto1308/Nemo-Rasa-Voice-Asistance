@@ -1,0 +1,499 @@
+[
+    {
+        "id": "2bb14eea30ce9320",
+        "type": "tab",
+        "label": "Flow 5",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "89c118a4a3a49f7b",
+        "type": "function",
+        "z": "2bb14eea30ce9320",
+        "name": "prepare_data",
+        "func": "const speaker_data = {\n    'unknown_speaker': msg.payload,\n}\n\nmsg.payload = speaker_data;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 40,
+        "wires": [
+            [
+                "3d93ac6a080adbd0"
+            ]
+        ]
+    },
+    {
+        "id": "84c6d527e014ead2",
+        "type": "switch",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "property": "payload.id_old_person",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "neq",
+                "v": "0",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 130,
+        "y": 160,
+        "wires": [
+            [
+                "1f2de89c1904184f"
+            ],
+            [
+                "e92451ab92480593"
+            ]
+        ]
+    },
+    {
+        "id": "e92451ab92480593",
+        "type": "function",
+        "z": "2bb14eea30ce9320",
+        "name": "unauthenticated user",
+        "func": "msg.payload = \"Lo siento, no puedo reconocer tu voz\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 220,
+        "wires": [
+            [
+                "84d40ea128ebc1a2"
+            ]
+        ]
+    },
+    {
+        "id": "2701729c6db2ac47",
+        "type": "debug",
+        "z": "2bb14eea30ce9320",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "8dce30ebdd4eb845",
+        "type": "mqtt in",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "topic": "audio/input",
+        "qos": "2",
+        "datatype": "utf8",
+        "broker": "a32b14d7.cc55b8",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 80,
+        "y": 40,
+        "wires": [
+            [
+                "5c8529c6acde7e77"
+            ]
+        ]
+    },
+    {
+        "id": "3fab76b91712ebc5",
+        "type": "function",
+        "z": "2bb14eea30ce9320",
+        "name": "direct_question",
+        "func": "msg.payload = {\n    \"sender\": String(msg.payload[\"id_old_person\"]),\n    \"message\": msg.payload[\"text\"]\n}/*\nmsg.payload = {\n    \"sender\": \"5\",\n    \"message\": \"recuerdame que tengo que tomarme el ibuprofeno a las 3 y 15\"\n}*/\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 120,
+        "wires": [
+            [
+                "f63bef6ea2b82ae4",
+                "3b7b35a820f86bda"
+            ]
+        ]
+    },
+    {
+        "id": "fc051422f0c3251d",
+        "type": "mqtt out",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "topic": "audio/output",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "a32b14d7.cc55b8",
+        "x": 870,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "5c8529c6acde7e77",
+        "type": "function",
+        "z": "2bb14eea30ce9320",
+        "name": "decode_audio",
+        "func": "msg.payload = JSON.parse(msg.payload)['audio'];\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 40,
+        "wires": [
+            [
+                "89c118a4a3a49f7b"
+            ]
+        ]
+    },
+    {
+        "id": "f63bef6ea2b82ae4",
+        "type": "http request",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://0.0.0.0:5005/webhooks/callback/webhook",
+        "tls": "a1c2f17bc214c207",
+        "persist": true,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 710,
+        "y": 120,
+        "wires": [
+            [
+                "630e7295bc328aaa"
+            ]
+        ]
+    },
+    {
+        "id": "033c280b681eae24",
+        "type": "function",
+        "z": "2bb14eea30ce9320",
+        "name": "extract_response",
+        "func": "msg.payload = msg.payload[\"text\"]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 320,
+        "wires": [
+            [
+                "7bc79f7c3f999d9f",
+                "84d40ea128ebc1a2"
+            ]
+        ]
+    },
+    {
+        "id": "630e7295bc328aaa",
+        "type": "debug",
+        "z": "2bb14eea30ce9320",
+        "name": "debug 19",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload",
+        "statusType": "auto",
+        "x": 880,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "3d93ac6a080adbd0",
+        "type": "http request",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://0.0.0.0:8000/audio/verification_input",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 770,
+        "y": 40,
+        "wires": [
+            [
+                "e487d1945db77bf3",
+                "5ed785b1b873ab71"
+            ]
+        ]
+    },
+    {
+        "id": "1f2de89c1904184f",
+        "type": "http request",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://0.0.0.0:8001/audio/speech_rec_input",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 330,
+        "y": 120,
+        "wires": [
+            [
+                "3fab76b91712ebc5"
+            ]
+        ]
+    },
+    {
+        "id": "e487d1945db77bf3",
+        "type": "link out",
+        "z": "2bb14eea30ce9320",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "e474149b64d5f477"
+        ],
+        "x": 915,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "e474149b64d5f477",
+        "type": "link in",
+        "z": "2bb14eea30ce9320",
+        "name": "link in 1",
+        "links": [
+            "e487d1945db77bf3"
+        ],
+        "x": 35,
+        "y": 160,
+        "wires": [
+            [
+                "84c6d527e014ead2"
+            ]
+        ]
+    },
+    {
+        "id": "84d40ea128ebc1a2",
+        "type": "http request",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://0.0.0.0:8002/audio/text_to_speech_input",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 630,
+        "y": 260,
+        "wires": [
+            [
+                "2701729c6db2ac47",
+                "fc051422f0c3251d"
+            ]
+        ]
+    },
+    {
+        "id": "3b7b35a820f86bda",
+        "type": "debug",
+        "z": "2bb14eea30ce9320",
+        "name": "debug 21",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "7bc79f7c3f999d9f",
+        "type": "debug",
+        "z": "2bb14eea30ce9320",
+        "name": "debug 22",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "35c71a726d945130",
+        "type": "inject",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 320,
+        "y": 180,
+        "wires": [
+            [
+                "3fab76b91712ebc5"
+            ]
+        ]
+    },
+    {
+        "id": "06403749a234ec60",
+        "type": "http in",
+        "z": "2bb14eea30ce9320",
+        "name": "callback_server",
+        "url": "/reminder",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 100,
+        "y": 320,
+        "wires": [
+            [
+                "93a8ead488f92ebe",
+                "033c280b681eae24"
+            ]
+        ]
+    },
+    {
+        "id": "59d493deee8d815d",
+        "type": "http response",
+        "z": "2bb14eea30ce9320",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 590,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "93a8ead488f92ebe",
+        "type": "function",
+        "z": "2bb14eea30ce9320",
+        "name": "message_received",
+        "func": "msg.payload = { \"status\": \"message sent\" }\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 420,
+        "wires": [
+            [
+                "59d493deee8d815d"
+            ]
+        ]
+    },
+    {
+        "id": "5ed785b1b873ab71",
+        "type": "debug",
+        "z": "2bb14eea30ce9320",
+        "name": "debug 23",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "a32b14d7.cc55b8",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "a1c2f17bc214c207",
+        "type": "tls-config",
+        "name": "",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "",
+        "verifyservercert": true,
+        "alpnprotocol": ""
+    }
+]

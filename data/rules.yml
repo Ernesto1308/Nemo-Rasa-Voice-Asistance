@@ -10,3 +10,13 @@ rules:
   steps:
     - intent: consult_an_specific_medication
     - action: action_consult_an_specific_medication
+
+- rule: schedule a reminder
+  steps:
+    - intent: save_medication_reminder
+    - action: action_save_medication_reminder
+
+- rule: trigger `action_handle_reminder` for `EXTERNAL_reminder`
+  steps:
+    - intent: EXTERNAL_reminder
+    - action: action_handle_reminder

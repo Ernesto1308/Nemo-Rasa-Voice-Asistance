@@ -9,6 +9,7 @@ nlu:
     - ¿Qué pastilla tengo que tomarme?
     - ¿Qué me tengo que tomar ahora?
     - ¿Qué pastilla me toca ahora?
+    - que pastillas tengo que tomarme ahora
 - intent: consult_an_specific_medication
   examples: |
     - ¿A qué hora tengo que tomarme el [Paracetamol](medication)?
@@ -18,12 +19,19 @@ nlu:
     - ¿A qué hora tengo que tomarme el [Paracetamol](medication), la [Duralgina](medication) y el [Ibuprofeno](medication)?
 - intent: tell_time
   examples: |
-    - Dime la [hora](hour)
-    - ¿Qué [hora](hour) es?
+    - Dime la hora
+    - ¿Qué hora es?
     - Hora
     - me puedes decir la hora
     - hora
-    - dime la [hora](hour)
+    - dime la hora
+- intent: save_medication_reminder
+  examples: |
+    - Recuerdame que tengo que tomarme el [Paracetamol](medication) a las 10 de la mañana
+    - Tengo que tomarme la [Duralgina](medication) a las 3 y 30 de la tarde, recuerdamelo
+    - Recuerdame que tengo que tomarme la [Duralgina](medication) a las 8
+    - Recuerdame que tengo que tomarme la [Paracetamol](medication) a las 10 en punto
+    - Recuerdame que tengo que tomarme el [Paracetamol](medication) a las 10 menos cuarto de la mañana
 - intent: affirm
   examples: |
     - Si

@@ -1,0 +1,6 @@
+{
+  "rule_only_slots": [
+    "medicines"
+  ],
+  "rule_only_loops": []
+}
