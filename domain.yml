@@ -1,5 +1,6 @@
 version: '3.1'
 intents:
+- EXTERNAL_reminder
 - affirm
 - consult_an_specific_medication
 - consult_medications
@@ -7,22 +8,23 @@ intents:
 - greet
 - mood_bad
 - mood_great
+- save_medication_reminder
 - tell_time
 entities:
 - medication
-- hour
 - name
+- time
 slots:
+  time:
+    type: list
+    mappings:
+    - type: from_entity
+      entity: time
   medicines:
     type: list
     mappings:
     - type: from_entity
       entity: medication
-  user_name:
-    type: text
-    mappings:
-    - type: from_entity
-      entity: name
 responses:
   utter_greet:
   - text: Hola
@@ -35,14 +37,15 @@ responses:
   utter_ok:
   - text: Esta bien.
 actions:
+- action_consult_medications
 - utter_greet
 - utter_great
 - utter_ok
 - utter_bad
 - action_tell_time
 - action_consult_an_specific_medication
-- action_consult_medications
-- action_call_responsible
+- action_save_medication_reminder
+- action_handle_reminder
 session_config:
   session_expiration_time: 60
   carry_over_slots_to_new_session: true

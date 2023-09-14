@@ -1,0 +1,20 @@
+[
+  {
+    "tag_name": "entity",
+    "ids_to_tags": {
+      "1": "B-medication",
+      "2": "I-medication",
+      "3": "L-medication",
+      "4": "U-medication",
+      "0": "O"
+    },
+    "tags_to_ids": {
+      "B-medication": 1,
+      "I-medication": 2,
+      "L-medication": 3,
+      "U-medication": 4,
+      "O": 0
+    },
+    "num_tags": 5
+  }
+]

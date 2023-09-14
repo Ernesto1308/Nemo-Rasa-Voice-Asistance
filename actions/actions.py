@@ -5,11 +5,12 @@ from typing import Any, Text, Dict, List
 
 import spacy
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SlotSet
+from rasa_sdk.events import SlotSet, ReminderScheduled
 from rasa_sdk.executor import CollectingDispatcher
 
+from acces_data_layer.models.models import RelOldPersonMedicine
 from acces_data_layer.services.medicine_service import select_by_name
-from acces_data_layer.services.r_old_person_medicine_service import select_by_ids_hour, select_by_op_id
+from acces_data_layer.services.r_old_person_medicine_service import select_by_ids_hour, select_by_op_id, insert
 from actions import numbers
 
 
@@ -101,7 +102,7 @@ def sentence_builder(
         if dict_message[index_value]:
             dict_message[index_value].append(f"{article}{medicine} a {tell_time(medication_hour)}")
         else:
-            dict_message[index_value] = [f"Tienes que tomar{article} {medicine} a {tell_time(medication_hour)}"]
+            dict_message[index_value] = [f"Tienes que tomar {article}{medicine} a {tell_time(medication_hour)}"]
     else:
         if dict_message[index_value]:
             dict_message[index_value] += f", ni {medicine}"
@@ -120,6 +121,8 @@ def sentence_finisher(sentences: List) -> str:
     for i, sentence in enumerate(iterable=sentences, start=1):
         if i != length:
             message += f"{sentence}, "
+        elif length == 1:
+            message = f"{sentence}."
         else:
             message += f"y {sentence}"
 
@@ -145,8 +148,7 @@ class ActionSpecificMedication(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        # id_old_person = int(tracker.sender_id)
-        id_old_person = 5
+        id_old_person = int(tracker.sender_id)
         current_medicines = tracker.get_slot("medicines")
         dict_message = {
             "take": [],
@@ -184,7 +186,7 @@ class ActionSpecificMedication(Action):
 
             message = sentence_finisher(sentences=dict_message["take"])
 
-            message += dict_message["not_take"] + " hoy"
+            message += dict_message["not_take"]
             message += dict_message["unknown"]
         else:
             message = f"No conozco esa medicina."
@@ -201,8 +203,7 @@ class ActionConsultMedications(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        # id_old_person = int(tracker.sender_id)
-        id_old_person = 5
+        id_old_person = int(tracker.sender_id)
         dict_message = {
             "take": []
         }
@@ -223,5 +224,57 @@ class ActionConsultMedications(Action):
         message = sentence_finisher(sentences=dict_message["take"])
 
         dispatcher.utter_message(text=message)
+
+        return []
+
+
+class ActionSaveMedication(Action):
+    def name(self) -> Text:
+        return "action_save_medication_reminder"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        id_old_person = int(tracker.sender_id)
+        medications = tracker.get_slot("medicines")
+        times = tracker.get_slot("time")
+        reminders: List[Dict[str, Any]] = []
+
+        for i, medication in enumerate(iterable=medications):
+            id_medication = select_by_name(medicine=medication)
+            time_object = datetime.strptime(times[i], "%Y-%m-%dT%H:%M:%S.%f%z")
+
+            insert(
+                op_med=RelOldPersonMedicine(
+                    id_old_person=id_old_person,
+                    id_medicine=id_medication,
+                    medicine_hour=time_object
+                )
+            )
+
+            entities = tracker.latest_message.get("entities")
+
+            reminders.append(ReminderScheduled(
+                "EXTERNAL_reminder",
+                trigger_date_time=time_object,
+                entities=entities,
+                name="my_reminder",
+                kill_on_user_message=False,
+            ))
+
+        dispatcher.utter_message(text="Te lo recordaré")
+
+        return reminders
+
+
+class ActionHandleReminder(Action):
+    def name(self) -> Text:
+        return "action_handle_reminder"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        medication = next(tracker.get_latest_entity_values("medication"), "algo")
+        dispatcher.utter_message(text=f"Tienes que tomar {medication}")
 
         return []
