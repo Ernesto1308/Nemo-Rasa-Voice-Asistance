@@ -1,12 +1,13 @@
 # This files contains your custom actions which can be used to run
 # custom Python code.
 from datetime import datetime, timedelta
-from typing import Any, Text, Dict, List
+from typing import Any, Text, Dict, List, Sequence, Union
 
 import spacy
 from rasa_sdk import Action, Tracker
 from rasa_sdk.events import SlotSet, ReminderScheduled
 from rasa_sdk.executor import CollectingDispatcher
+from sqlalchemy import Row, RowMapping
 
 from acces_data_layer.models.models import RelOldPersonMedicine
 from acces_data_layer.services.medicine_service import select_by_name
@@ -79,7 +80,7 @@ def sentence_builder(
         dict_message: dict,
         index_value: str,
         medicine: str,
-        medication_hour: datetime = None
+        medication_hour:  List = None
 ) -> dict:
     """
     Constructs a phrase in Spanish mentioning a medicine and when to take it.
@@ -97,12 +98,19 @@ def sentence_builder(
     """
     gender = get_gender(medicine)
     article = "" if not gender else "la " if gender == "Fem" else "el "
+    amount_medicines = len(medication_hour)
 
     if index_value == "take":
-        if dict_message[index_value]:
-            dict_message[index_value].append(f"{article}{medicine} a {tell_time(medication_hour)}")
-        else:
-            dict_message[index_value] = [f"Tienes que tomar {article}{medicine} a {tell_time(medication_hour)}"]
+        for i, med in enumerate(medication_hour, start=1):
+            if 1 < i < amount_medicines:
+                dict_message[index_value][medicine] += f", a {tell_time(med)}"
+            elif i == 1:
+                if dict_message[index_value]:
+                    dict_message[index_value][medicine] = f"{article}{medicine} a {tell_time(med)}"
+                else:
+                    dict_message[index_value][medicine] = f"Tienes que tomar {article}{medicine} a {tell_time(med)}"
+            else:
+                dict_message[index_value][medicine] += f" y a {tell_time(med)}"
     else:
         if dict_message[index_value]:
             dict_message[index_value] += f", ni {medicine}"
@@ -114,11 +122,11 @@ def sentence_builder(
     return dict_message
 
 
-def sentence_finisher(sentences: List) -> str:
+def sentence_finisher(sentences: Union[dict, str]) -> str:
     message = ""
     length = len(sentences)
 
-    for i, sentence in enumerate(iterable=sentences, start=1):
+    for i, sentence in enumerate(iterable=sentences.values(), start=1):
         if i != length:
             message += f"{sentence}, "
         elif length == 1:
@@ -151,7 +159,7 @@ class ActionSpecificMedication(Action):
         id_old_person = int(tracker.sender_id)
         current_medicines = tracker.get_slot("medicines")
         dict_message = {
-            "take": [],
+            "take": {},
             "not_take": '',
             "unknown": ''
         }
@@ -205,7 +213,7 @@ class ActionConsultMedications(Action):
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         id_old_person = int(tracker.sender_id)
         dict_message = {
-            "take": []
+            "take": {}
         }
         current_hour = datetime.now()
         end_hour = current_hour + timedelta(hours=12)
@@ -218,7 +226,7 @@ class ActionConsultMedications(Action):
                 dict_message=dict_message,
                 index_value="take",
                 medicine=medicine,
-                medication_hour=medication_hour
+                medication_hour=[medication_hour]
             )
 
         message = sentence_finisher(sentences=dict_message["take"])
@@ -277,4 +285,4 @@ class ActionHandleReminder(Action):
         medication = next(tracker.get_latest_entity_values("medication"), "algo")
         dispatcher.utter_message(text=f"Tienes que tomar {medication}")
 
-        return []
+        return [SlotSet("medicines", None)]

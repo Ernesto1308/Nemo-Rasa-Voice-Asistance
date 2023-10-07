@@ -52,7 +52,7 @@ def select_by_id(id_op: int, id_med: int) -> Optional[RelOldPersonMedicine]:
         return relation
 
 
-def select_by_ids_hour(id_op: int, id_med: int, hour: datetime) -> Optional[datetime]:
+def select_by_ids_hour(id_op: int, id_med: int, hour: datetime) -> List:
     """
     Returns the medicine hour for the relation between an old person
     and a medicine after the specified hour.
@@ -73,9 +73,9 @@ def select_by_ids_hour(id_op: int, id_med: int, hour: datetime) -> Optional[date
             .where(RelOldPersonMedicine.id_old_person == id_op)
             .where(RelOldPersonMedicine.id_medicine == id_med)
             .where(RelOldPersonMedicine.medicine_hour >= hour)
-        ).first()
+        ).all()
 
-        return result
+        return list(result)
 
 
 def select_by_op_id(
