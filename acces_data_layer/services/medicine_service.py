@@ -1,15 +1,15 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 from sqlalchemy.orm import Session
 from acces_data_layer.models.models import Medicine
 from acces_data_layer.services import engine
 
 
-def insert(medicine: Medicine):
+def insert(medicine_data: Any) -> None:
     """
     Inserts a new medicine into the database.
 
     Args:
-        medicine: The Medicine object to insert
+        medicine_data: The Medicine object to insert
 
     Returns:
         None
@@ -19,11 +19,12 @@ def insert(medicine: Medicine):
         Commits change to persist in the database.
     """
     with Session(engine) as session:
+        medicine = Medicine(**medicine_data)
         session.add(medicine)
         session.commit()
 
 
-def select() -> List[Medicine]:
+def select_all() -> List[dict]:
     """
     Gets all medicines from the database.
 
@@ -39,10 +40,11 @@ def select() -> List[Medicine]:
     """
     with Session(engine) as session:
         medicines = session.query(Medicine).all()
-        return medicines
+        medicines_dict = [medicine.to_dict() for medicine in medicines]
+        return medicines_dict
 
 
-def select_by_id(id_medicine: int) -> Optional[Medicine]:
+def select_by_id(id_medicine: int) -> dict:
     """
     Gets a medicine by ID.
 
@@ -57,7 +59,7 @@ def select_by_id(id_medicine: int) -> Optional[Medicine]:
         Returns Medicine if found, otherwise returns None.
     """
     with Session(engine) as session:
-        medicine = session.get(Medicine, id_medicine)
+        medicine = session.get(Medicine, id_medicine).to_dict()
         return medicine
 
 
@@ -81,12 +83,12 @@ def select_by_name(medicine: str) -> int:
         return result.id_medicine if result else None
 
 
-def update(medicine: Medicine):
+def update(medicine_data: Any):
     """
     Updates an existing medicine.
 
     Args:
-        medicine: The Medicine object to update
+        medicine_data: The Medicine object to update
 
     Returns:
         None
@@ -96,6 +98,7 @@ def update(medicine: Medicine):
         Sets its fields to the passed Medicine object. Commits changes.
     """
     with Session(engine) as session:
+        medicine = Medicine(**medicine_data)
         current_medicine = session.get(Medicine, medicine.id_medicine)
         current_medicine.medicine_name = medicine.medicine_name
         session.commit()

@@ -1,15 +1,17 @@
-from typing import Optional, List
+from typing import List, Any
+
 from sqlalchemy.orm import Session
+
 from acces_data_layer.models.models import Feeding
 from acces_data_layer.services import engine
 
 
-def insert(feeding: Feeding):
+def insert(feeding_data: Any):
     """
     Inserts a new feeding into the database.
 
     Args:
-        feeding: The Feeding object to insert
+        feeding_data: The Feeding object to insert
 
     Returns:
         None
@@ -19,11 +21,12 @@ def insert(feeding: Feeding):
         Commits to persist in database.
     """
     with Session(engine) as session:
+        feeding = Feeding(**feeding_data)
         session.add(feeding)
         session.commit()
 
 
-def select() -> List[Feeding]:
+def select_all() -> List[dict]:
     """
     Gets all feedings from the database.
 
@@ -38,11 +41,12 @@ def select() -> List[Feeding]:
         Returns them in a list.
     """
     with Session(engine) as session:
-        feedings = session.query(Feeding).all()
-        return feedings
+        feeding = session.query(Feeding).all()
+        feeding_dict = [feeding.to_dict() for feeding in feeding]
+        return feeding_dict
 
 
-def select_by_id(id_feeding: int) -> Optional[Feeding]:
+def select_by_id(id_feeding: int) -> dict:
     """
     Gets a feeding by ID.
 
@@ -57,16 +61,16 @@ def select_by_id(id_feeding: int) -> Optional[Feeding]:
         Returns Feeding if found, otherwise returns None.
     """
     with Session(engine) as session:
-        feeding = session.get(Feeding, id_feeding)
+        feeding = session.get(Feeding, id_feeding).to_dict()
         return feeding
 
 
-def update(feeding: Feeding):
+def update(feeding_data: Any):
     """
     Updates an existing feeding.
 
     Args:
-        feeding: The Feeding object to update
+        feeding_data: The Feeding object to update
 
     Returns:
         None
@@ -76,6 +80,7 @@ def update(feeding: Feeding):
         Sets field to passed Feeding object. Commits changes.
     """
     with Session(engine) as session:
+        feeding = Feeding(**feeding_data)
         current_feeding = session.get(Feeding, feeding.id_feeding)
         current_feeding.feeding_name = feeding.feeding_name
         session.commit()

@@ -1,15 +1,15 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 from sqlalchemy.orm import Session
 from acces_data_layer.models.models import Activity
 from acces_data_layer.services import engine
 
 
-def insert(activity: Activity):
+def insert(activity_data: Any):
     """
     Inserts a new activity into the database.
 
     Args:
-        activity: The Activity object to insert
+        activity_data: The Activity object to insert
 
     Returns:
         None
@@ -19,11 +19,12 @@ def insert(activity: Activity):
         Commits the changes to persist the new activity in the database.
     """
     with Session(engine) as session:
+        activity = Activity(**activity_data)
         session.add(activity)
         session.commit()
 
 
-def select() -> List[Activity]:
+def select_all() -> List[dict]:
     """
     Gets all activities from the database.
 
@@ -39,10 +40,11 @@ def select() -> List[Activity]:
     """
     with Session(engine) as session:
         activities = session.query(Activity).all()
-        return activities
+        activities_dict = [activity.to_dict() for activity in activities]
+        return activities_dict
 
 
-def select_by_id(id_activity: int) -> Optional[Activity]:
+def select_by_id(id_activity: int) -> dict:
     """
     Gets an activity by ID.
 
@@ -57,16 +59,16 @@ def select_by_id(id_activity: int) -> Optional[Activity]:
         Returns the Activity if found, otherwise returns None.
     """
     with Session(engine) as session:
-        activity = session.get(Activity, id_activity)
+        activity = session.get(Activity, id_activity).to_dict()
         return activity
 
 
-def update(activity: Activity):
+def update(activity_data: Any):
     """
     Updates an existing activity.
 
     Args:
-        activity: The Activity object to update
+        activity_data: The Activity object to update
 
     Returns:
         None
@@ -76,6 +78,7 @@ def update(activity: Activity):
         Sets its fields to the passed Activity object. Commits changes.
     """
     with Session(engine) as session:
+        activity = Activity(**activity_data)
         current_activity = session.get(Activity, activity.id_activity)
         current_activity.activity_name = activity.activity_name
         session.commit()
