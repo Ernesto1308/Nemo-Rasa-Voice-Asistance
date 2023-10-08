@@ -6,23 +6,24 @@ from acces_data_layer.models.models import RelOldPersonMedicine, Medicine, OldPe
 from acces_data_layer.services import engine
 
 
-def insert(op_med: RelOldPersonMedicine):
+def insert(op_med_data: Any) -> None:
     """
     Inserts a new relation between an old person and a medicine into the database.
 
     Args:
-      op_med: The relation to insert.
+      op_med_data: The relation to insert.
 
     Returns:
       None.
     """
 
     with Session(engine) as session:
+        op_med = RelOldPersonMedicine(**op_med_data)
         session.add(op_med)
         session.commit()
 
 
-def select_all() -> List[Type[RelOldPersonMedicine]]:
+def select_all() -> List[dict]:
     """
     Returns all the relations between old persons and medicines from the database.
 
@@ -32,24 +33,8 @@ def select_all() -> List[Type[RelOldPersonMedicine]]:
 
     with Session(engine) as session:
         relations = session.query(RelOldPersonMedicine).all()
-        return relations
-
-
-def select_by_id(id_op: int, id_med: int) -> Optional[RelOldPersonMedicine]:
-    """
-    Returns the relation between an old person and a medicine with the given IDs.
-
-    Args:
-      id_op: The ID of the old person.
-      id_med: The ID of the medicine.
-
-    Returns:
-      The relation with the given IDs, or `None` if no relation with those IDs is found.
-    """
-
-    with Session(engine) as session:
-        relation = session.get(RelOldPersonMedicine, (id_op, id_med))
-        return relation
+        relations_dict = [relation.to_dict() for relation in relations]
+        return relations_dict
 
 
 def select_by_ids_hour(id_op: int, id_med: int, hour: datetime) -> List:
@@ -121,24 +106,35 @@ def update(op_med: RelOldPersonMedicine):
     """
 
     with Session(engine) as session:
-        current_relation = session.get(RelOldPersonMedicine, (op_med.id_old_person, op_med.id_medicine))
-        current_relation.medicine_hour = op_med.medicine_hour
+        op_med_current_state = RelOldPersonMedicine(**op_med.get('current_state'))
+        op_med_next_state = RelOldPersonMedicine(**op_med.get('next_state'))
+        current_relation = session.get(
+            RelOldPersonMedicine, (
+                op_med_current_state.id_old_person,
+                op_med_current_state.id_medicine,
+                op_med_current_state.medicine_hour
+            )
+        )
+        current_relation.id_old_person = op_med_next_state.id_old_person
+        current_relation.id_medicine = op_med_next_state.id_medicine
+        current_relation.medicine_hour = op_med_next_state.medicine_hour
         session.commit()
 
 
-def delete(id_op: int, id_med: int):
+def delete(id_op: int, id_med: int, medicine_hour: datetime) -> None:
     """
     Deletes the relation between an old person and a medicine with the given IDs from the database.
 
     Args:
       id_op: The ID of the old person.
       id_med: The ID of the medicine.
+      medicine_hour: The hour of the medicine.
 
     Returns:
       None.
     """
 
     with Session(engine) as session:
-        relation = session.get(RelOldPersonMedicine, (id_op, id_med))
+        relation = session.get(RelOldPersonMedicine, (id_op, id_med, medicine_hour))
         session.delete(relation)
         session.commit()

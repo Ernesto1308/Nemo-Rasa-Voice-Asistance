@@ -1,15 +1,17 @@
-from typing import Optional, List
+from typing import List, Any
+
 from sqlalchemy.orm import Session
+
 from acces_data_layer.models.models import Exercise
 from acces_data_layer.services import engine
 
 
-def insert(exercise: Exercise):
+def insert(exercise_data: Any):
     """
     Inserts a new exercise into the database.
 
     Args:
-        exercise: The Exercise object to insert
+        exercise_data: The Exercise object to insert
 
     Returns:
         None
@@ -19,11 +21,12 @@ def insert(exercise: Exercise):
         Commits to persist in database.
     """
     with Session(engine) as session:
+        exercise = Exercise(**exercise_data)
         session.add(exercise)
         session.commit()
 
 
-def select() -> List[Exercise]:
+def select_all() -> List[dict]:
     """
     Gets all exercises from the database.
 
@@ -39,10 +42,11 @@ def select() -> List[Exercise]:
     """
     with Session(engine) as session:
         exercises = session.query(Exercise).all()
-        return exercises
+        exercises_dict = [exercise.to_dict() for exercise in exercises]
+        return exercises_dict
 
 
-def select_by_id(id_exercise: int) -> Optional[Exercise]:
+def select_by_id(id_exercise: int) -> dict:
     """
     Gets an exercise by ID.
 
@@ -57,16 +61,16 @@ def select_by_id(id_exercise: int) -> Optional[Exercise]:
         Returns Exercise if found, otherwise returns None.
     """
     with Session(engine) as session:
-        exercise = session.get(Exercise, id_exercise)
+        exercise = session.get(Exercise, id_exercise).to_dict()
         return exercise
 
 
-def update(exercise: Exercise):
+def update(exercise_data: Any):
     """
     Updates an existing exercise.
 
     Args:
-        exercise: The Exercise object to update
+        exercise_data: The Exercise object to update
 
     Returns:
         None
@@ -76,6 +80,7 @@ def update(exercise: Exercise):
         Sets field to passed Exercise object. Commits changes.
     """
     with Session(engine) as session:
+        exercise = Exercise(**exercise_data)
         current_exercise = session.get(Exercise, exercise.id_exercise)
         current_exercise.exercise_name = exercise.exercise_name
         session.commit()
