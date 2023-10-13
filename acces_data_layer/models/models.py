@@ -31,7 +31,7 @@ class OldPerson(Base):
         return {
             'id_old_person': self.id_old_person,
             'old_person_name': self.old_person_name,
-            'audio': serialize_bytes(data=self.audio),
+            # 'audio': serialize_bytes(data=self.audio),
         }
 
 

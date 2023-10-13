@@ -1,5 +1,5 @@
 from flask import Flask
-
+from flask_cors import CORS
 from api.controllers import (old_person_controller, responsible_person_controller, activity_controller,
                              exercise_controller, feeding_controller, medicine_controller, r_old_person_act_controller,
                              r_old_person_exercise_controller, r_old_person_feeding_controller,
@@ -20,5 +20,6 @@ def create_app():
     app.register_blueprint(r_old_person_feeding_controller.bp)
     app.register_blueprint(r_old_person_medicine_controller.bp)
     app.register_blueprint(r_old_person_responsible_controller.bp)
+    CORS(app)
 
     return app
