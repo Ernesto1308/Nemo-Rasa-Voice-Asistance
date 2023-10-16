@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import List, Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from acces_data_layer.models.models import RelOldPersonFeeding
+from acces_data_layer.models.models import RelOldPersonFeeding, OldPerson, Feeding
 from acces_data_layer.services import engine
 
 
@@ -33,9 +34,31 @@ def select_all() -> List[dict]:
     """
 
     with Session(engine) as session:
-        relations = session.query(RelOldPersonFeeding).all()
-        relations_dict = [relation.to_dict() for relation in relations]
-        return relations_dict
+        relations = session.execute(
+            select(
+                OldPerson.id_old_person, OldPerson.old_person_name,
+                Feeding.id_feeding, Feeding.feeding_name,
+                RelOldPersonFeeding.feeding_hour
+            ).join(
+                RelOldPersonFeeding, OldPerson.id_old_person == RelOldPersonFeeding.id_old_person
+            ).join(
+                Feeding, RelOldPersonFeeding.id_feeding == Feeding.id_feeding
+            )
+        )
+        rows = []
+
+        for row in relations:
+            rows.append(
+                {
+                    "id_old_person": row.id_old_person,
+                    "old_person_name": row.old_person_name,
+                    "id_feeding": row.id_feeding,
+                    "feeding_name": row.feeding_name,
+                    "feeding_hour": row.feeding_hour,
+                }
+            )
+
+        return rows
 
 
 def update(op_feed_data: Any) -> None:

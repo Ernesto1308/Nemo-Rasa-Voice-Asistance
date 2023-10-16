@@ -20,7 +20,7 @@ def create():
 @bp.route('/r_old_person_feeding', methods=['GET'])
 def get_r_old_person_feeding():
     r_old_person_feeding = select_all()  # Call the select all method in the access data layer
-    return jsonify({'r_old_person_feeding': r_old_person_feeding})
+    return jsonify(r_old_person_feeding)
 
 
 # Update

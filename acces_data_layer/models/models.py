@@ -15,8 +15,6 @@ class OldPerson(Base):
     audio: Mapped[bytes] = mapped_column(LargeBinary)
     responsible_persons: Mapped[List["ResponsiblePerson"]] = relationship(secondary="r_old_person_responsible",
                                                                           back_populates="old_persons", viewonly=True)
-    activities: Mapped[List["Activity"]] = relationship(secondary="r_old_person_activity",
-                                                        back_populates="old_persons", viewonly=True)
     exercises: Mapped[List["Exercise"]] = relationship(secondary="r_old_person_exercise",
                                                        back_populates="old_persons", viewonly=True)
     feedings: Mapped[List["Feeding"]] = relationship(secondary="r_old_person_feeding",
@@ -68,44 +66,6 @@ class RelOldPersonResponsible(Base):
         return {
             'id_old_person': self.id_old_person,
             'id_responsible_person': self.id_responsible_person
-        }
-
-
-class Activity(Base):
-    __tablename__ = "activity"
-
-    id_activity: Mapped[int] = mapped_column(primary_key=True)
-    activity_name: Mapped[str] = mapped_column(String)
-    old_persons: Mapped[List[OldPerson]] = relationship(secondary="r_old_person_activity",
-                                                        back_populates="activities", viewonly=True)
-
-    def __repr__(self) -> str:
-        return f"Id Activity(id={self.id_activity!r}, Activity name={self.activity_name!r})"
-
-    def to_dict(self) -> Dict:
-        return {
-            'id_activity': self.id_activity,
-            'activity_name': self.activity_name,
-        }
-
-
-class RelOldPersonActivity(Base):
-    __tablename__ = "r_old_person_activity"
-
-    id_old_person: Mapped[int] = mapped_column(ForeignKey("old_person.id_old_person"), primary_key=True)
-    id_activity: Mapped[int] = mapped_column(ForeignKey("activity.id_activity"),
-                                             primary_key=True)
-    activity_hour: Mapped[datetime] = mapped_column(TIMESTAMP, primary_key=True)
-
-    def __repr__(self) -> str:
-        return f"Old Person(id={self.id_old_person!r}), Activity(id={self.id_activity!r}) " \
-               f"Activity Hour(hour={self.activity_hour!r}"
-
-    def to_dict(self) -> Dict:
-        return {
-            'id_old_person': self.id_old_person,
-            'id_activity': self.id_activity,
-            'activity_hour': self.activity_hour
         }
 
 

@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Optional, List, Type, Tuple, Any, Sequence, Union
+from typing import List, Tuple, Any, Sequence
+
+from sqlalchemy import select, Row
 from sqlalchemy.orm import Session
-from sqlalchemy import select, Row, ScalarResult, RowMapping, Result, MappingResult
+
 from acces_data_layer.models.models import RelOldPersonMedicine, Medicine, OldPerson
 from acces_data_layer.services import engine
 
@@ -32,9 +34,31 @@ def select_all() -> List[dict]:
     """
 
     with Session(engine) as session:
-        relations = session.query(RelOldPersonMedicine).all()
-        relations_dict = [relation.to_dict() for relation in relations]
-        return relations_dict
+        relations = session.execute(
+           select(
+               OldPerson.id_old_person, OldPerson.old_person_name,
+               Medicine.id_medicine, Medicine.medicine_name,
+               RelOldPersonMedicine.medicine_hour
+           ).join(
+               RelOldPersonMedicine, OldPerson.id_old_person == RelOldPersonMedicine.id_old_person
+           ).join(
+              Medicine, RelOldPersonMedicine.id_medicine == Medicine.id_medicine
+           )
+        )
+        rows = []
+
+        for row in relations:
+            rows.append(
+                {
+                    "id_old_person": row.id_old_person,
+                    "old_person_name": row.old_person_name,
+                    "id_medicine": row.id_medicine,
+                    "medicine_name": row.medicine_name,
+                    "medicine_hour": row.medicine_hour,
+                }
+            )
+
+        return rows
 
 
 def select_by_ids_hour(id_op: int, id_med: int, hour: datetime) -> List:

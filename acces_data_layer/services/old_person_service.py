@@ -35,7 +35,6 @@ def select_all() -> List[dict]:
     with Session(engine) as session:
         old_persons = session.query(OldPerson).options(
             joinedload(OldPerson.responsible_persons),
-            joinedload(OldPerson.activities),
             joinedload(OldPerson.medicines),
             joinedload(OldPerson.feedings),
             joinedload(OldPerson.exercises)
