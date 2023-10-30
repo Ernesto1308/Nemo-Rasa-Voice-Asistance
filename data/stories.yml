@@ -4,34 +4,10 @@ stories:
 
 - story: happy path 1
   steps:
-  - intent: greet
-  - action: utter_greet
-  - intent: mood_great
-  - action: utter_great
-  - intent: consult_medications
-  - action: action_consult_medications
-
-- story: happy path 2
-  steps:
-  - intent: greet
-  - action: utter_greet
-  - intent: mood_great
-  - action: utter_great
-
-- story: ask if we need to call someone 1
-  steps:
-  - intent: mood_bad
-  - action: utter_bad
-  - intent: affirm
-
-- story: ask if we need to call someone 2
-  steps:
-  - intent: mood_bad
-  - action: utter_bad
-  - intent: deny
-  - action: utter_ok
+  - intent: consult_medicines
+  - action: action_consult_medicines
 
 - story: interactive_story_1
   steps:
-  - intent: consult_medications
-  - action: action_consult_medications
+  - intent: consult_medicines
+  - action: action_consult_medicines

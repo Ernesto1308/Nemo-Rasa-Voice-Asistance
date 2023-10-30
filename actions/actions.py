@@ -1,17 +1,17 @@
 # This files contains your custom actions which can be used to run
 # custom Python code.
 from datetime import datetime, timedelta
-from typing import Any, Text, Dict, List, Sequence, Union
+from typing import Any, Text, Dict, List, Union
 
 import spacy
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SlotSet, ReminderScheduled
+from rasa_sdk.events import SlotSet
 from rasa_sdk.executor import CollectingDispatcher
-from sqlalchemy import Row, RowMapping
 
 from acces_data_layer.models.models import RelOldPersonMedicine
 from acces_data_layer.services.medicine_service import select_by_name
-from acces_data_layer.services.r_old_person_medicine_service import select_by_ids_hour, select_by_op_id, insert
+from acces_data_layer.services.r_old_person_medicine_service import (select_by_ids_hour, select_by_id_op_hour,
+                                                                     insert, update)
 from actions import numbers
 
 
@@ -80,7 +80,7 @@ def sentence_builder(
         dict_message: dict,
         index_value: str,
         medicine: str,
-        medication_hour:  List = None
+        medication_hour: List = None
 ) -> dict:
     """
     Constructs a phrase in Spanish mentioning a medicine and when to take it.
@@ -151,7 +151,7 @@ class ActionTellTime(Action):
 
 class ActionSpecificMedication(Action):
     def name(self) -> Text:
-        return "action_consult_an_specific_medication"
+        return "action_consult_an_specific_medicine"
 
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -166,7 +166,7 @@ class ActionSpecificMedication(Action):
 
         if current_medicines:
             for medicine in current_medicines:
-                id_medicine = select_by_name(medicine=medicine)
+                id_medicine = select_by_name(medicine_name=medicine)
 
                 if id_medicine:
                     current_hour = datetime.now()
@@ -206,7 +206,7 @@ class ActionSpecificMedication(Action):
 
 class ActionConsultMedications(Action):
     def name(self) -> Text:
-        return "action_consult_medications"
+        return "action_consult_medicines"
 
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
@@ -217,7 +217,7 @@ class ActionConsultMedications(Action):
         }
         current_hour = datetime.now()
         end_hour = current_hour + timedelta(hours=12)
-        current_medicines = select_by_op_id(
+        current_medicines = select_by_id_op_hour(
             id_op=id_old_person, start_hour=current_hour, end_hour=end_hour
         )
 
@@ -244,35 +244,24 @@ class ActionSaveMedication(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         id_old_person = int(tracker.sender_id)
-        medications = tracker.get_slot("medicines")
+        medicines = tracker.get_slot("medicines")
         times = tracker.get_slot("time")
-        reminders: List[Dict[str, Any]] = []
 
-        for i, medication in enumerate(iterable=medications):
-            id_medication = select_by_name(medicine=medication)
-            time_object = datetime.strptime(times[i], "%Y-%m-%dT%H:%M:%S.%f%z")
+        for i, medicine in enumerate(iterable=medicines):
+            id_medication = select_by_name(medicine_name=medicine)
+            time_object = datetime.strptime(times[i], "%Y-%m-%dT%H:%M:%S")
 
             insert(
-                op_med=RelOldPersonMedicine(
+                op_med_data=RelOldPersonMedicine(
                     id_old_person=id_old_person,
                     id_medicine=id_medication,
                     medicine_hour=time_object
                 )
             )
 
-            entities = tracker.latest_message.get("entities")
-
-            reminders.append(ReminderScheduled(
-                "EXTERNAL_reminder",
-                trigger_date_time=time_object,
-                entities=entities,
-                name="my_reminder",
-                kill_on_user_message=False,
-            ))
-
         dispatcher.utter_message(text="Te lo recordaré")
 
-        return reminders
+        return [SlotSet("medicines", None), SlotSet("time", None)]
 
 
 class ActionHandleReminder(Action):
@@ -282,7 +271,67 @@ class ActionHandleReminder(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        medication = next(tracker.get_latest_entity_values("medication"), "algo")
-        dispatcher.utter_message(text=f"Tienes que tomar {medication}")
+        print("Action Handle Reminder")
+        medicine = next(tracker.get_latest_entity_values("medicine"), "algo")
+        medicine_hour_str = next(tracker.get_latest_entity_values("medicine_hour"), "en algun momento")
+        medicine_hour = datetime.strptime(medicine_hour_str, "%Y-%m-%dT%H:%M:%S")
 
-        return [SlotSet("medicines", None)]
+        dispatcher.utter_message(text=f"Recuerda tomar {medicine} a {tell_time(hour_to_convert=medicine_hour)}")
+
+        return [SlotSet("medicines", None), SlotSet("medicine", None), SlotSet("medicine_hour", None)]
+
+
+class ActionHandleVerifier(Action):
+    def name(self) -> Text:
+        return "action_set_medicine_taken_slots"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        print("Action Set Slots")
+        medicine_hour_str = next(tracker.get_latest_entity_values("medicine_hour"), "en algun momento")
+        medicine_name = next(tracker.get_latest_entity_values("medicine"), "algo")
+        medicine_hour = datetime.strptime(medicine_hour_str, "%Y-%m-%dT%H:%M:%S")
+        medicine_hour_tts = tell_time(medicine_hour)
+
+        return [
+            SlotSet("medicine", medicine_name),
+            SlotSet("medicine_hour_tts", medicine_hour_tts),
+            SlotSet("medicine_hour", medicine_hour_str)
+        ]
+
+
+class ActionUpdateStatus(Action):
+    def name(self) -> Text:
+        return "action_update_status"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        print("Action Update Status")
+        id_old_person = int(tracker.sender_id)
+        medicine_hour_str = tracker.get_slot("medicine_hour")
+        medicine_hour = datetime.strptime(medicine_hour_str, "%Y-%m-%dT%H:%M:%S")
+        medicine_name = tracker.get_slot("medicine")
+        id_medicine = select_by_name(medicine_name=medicine_name)
+        relation = {
+            "current_state": {
+                "id_old_person": id_old_person,
+                "id_medicine": id_medicine,
+                "medicine_hour": medicine_hour
+            },
+            "next_state": {
+                "id_old_person": id_old_person,
+                "id_medicine": id_medicine,
+                "medicine_hour": medicine_hour,
+                "status": "completado"
+            }
+        }
+
+        update(op_med=relation)
+
+        return [
+            SlotSet("medicine", None),
+            SlotSet("medicine_hour_tts", None),
+            SlotSet("medicine_hour", None)
+        ]

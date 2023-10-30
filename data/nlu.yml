@@ -1,22 +1,18 @@
 version: "3.1"
 nlu:
-- intent: greet
-  examples: |
-    - Hola
-    - Que tal
-- intent: consult_medications
+- intent: consult_medicines
   examples: |
     - ¿Qué pastilla tengo que tomarme?
     - ¿Qué me tengo que tomar ahora?
     - ¿Qué pastilla me toca ahora?
-    - que pastillas tengo que tomarme ahora
-- intent: consult_an_specific_medication
+    - ¿Qué pastillas tengo que tomarme ahora?
+- intent: consult_an_specific_medicine
   examples: |
-    - ¿A qué hora tengo que tomarme el [Paracetamol](medication)?
-    - ¿A qué hora tengo que tomarme la [Duralgina](medication)?
-    - ¿A qué hora tengo que tomarme la [Venadrilina](medication)?
-    - ¿A qué hora tengo que tomarme el [Ibuprofeno](medication)?
-    - ¿A qué hora tengo que tomarme el [Paracetamol](medication), la [Duralgina](medication) y el [Ibuprofeno](medication)?
+    - ¿A qué hora tengo que tomarme el [Paracetamol](medicine)?
+    - ¿A qué hora tengo que tomarme la [Duralgina](medicine)?
+    - ¿A qué hora tengo que tomarme la [Venadrilina](medicine)?
+    - ¿A qué hora tengo que tomarme el [Ibuprofeno](medicine)?
+    - ¿A qué hora tengo que tomarme el [Paracetamol](medicine), la [Duralgina](medicine) y el [Ibuprofeno](medicine)?
 - intent: tell_time
   examples: |
     - Dime la hora
@@ -25,34 +21,27 @@ nlu:
     - me puedes decir la hora
     - hora
     - dime la hora
-- intent: save_medication_reminder
+- intent: save_medicine_reminder
   examples: |
-    - Recuerdame que tengo que tomarme el [Paracetamol](medication) a las 10 de la mañana
-    - Tengo que tomarme la [Duralgina](medication) a las 3 y 30 de la tarde, recuerdamelo
-    - Recuerdame que tengo que tomarme la [Duralgina](medication) a las 8
-    - Recuerdame que tengo que tomarme la [Paracetamol](medication) a las 10 en punto
-    - Recuerdame que tengo que tomarme el [Paracetamol](medication) a las 10 menos cuarto de la mañana
+    - Recuerdame que tengo que tomarme el [Paracetamol](medicine) a las 10 de la mañana
+    - Tengo que tomarme la [Duralgina](medicine) a las 3 y 30 de la tarde, recuerdamelo
+    - Recuerdame que tengo que tomarme la [Duralgina](medicine) a las 8
+    - Recuerdame que tengo que tomarme la [Paracetamol](medicine) a las 10 en punto
+    - Recuerdame que tengo que tomarme el [Paracetamol](medicine) a las 10 menos cuarto de la mañana
 - intent: affirm
   examples: |
     - Si
     - Esta bien
+    - Ya me lo tomé
+    - Ya me tome la pastilla
 - intent: deny
   examples: |
     - no
     - no es necesario
     - no hace falta
-- intent: mood_great
-  examples: |
-    - perfecto
-    - bien
-    - genial
-    - estoy bien
-- intent: mood_bad
-  examples: |
-    - no me siento bien
-    - estoy mal
-    - mal
-    - me siento mal
+    - No me la he tomado
+    - No lo he hecho
+    - No me he tomado la pastilla
 - synonym: medicamento
   examples: |
     - pastilla

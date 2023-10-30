@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import List, Dict
+
 from sqlalchemy import String, ForeignKey, LargeBinary, TIMESTAMP
 from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.orm import mapped_column
+
 from acces_data_layer.models import Base
-from utils import serialize_bytes
 
 
 class OldPerson(Base):
@@ -170,14 +171,16 @@ class RelOldPersonMedicine(Base):
     id_medicine: Mapped[int] = mapped_column(ForeignKey("medicine.id_medicine"),
                                              primary_key=True)
     medicine_hour: Mapped[datetime] = mapped_column(TIMESTAMP, primary_key=True)
+    status: Mapped[str] = mapped_column(String)
 
     def __repr__(self) -> str:
         return f"Old Person(id={self.id_old_person!r}), Medicine(id={self.id_medicine!r})" \
-               f"Medicine Hour(hour={self.medicine_hour!r}"
+               f"Medicine Hour(hour={self.medicine_hour!r}, Status(status={self.status!r})"
 
     def to_dict(self) -> Dict:
         return {
             'id_old_person': self.id_old_person,
             'id_medicine': self.id_medicine,
-            'medicine_hour': self.medicine_hour
+            'medicine_hour': self.medicine_hour,
+            'status': self.status
         }

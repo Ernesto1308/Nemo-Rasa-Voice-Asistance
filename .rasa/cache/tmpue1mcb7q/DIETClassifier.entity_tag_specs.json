@@ -1,0 +1,20 @@
+[
+  {
+    "tag_name": "entity",
+    "ids_to_tags": {
+      "1": "B-medicine",
+      "2": "I-medicine",
+      "3": "L-medicine",
+      "4": "U-medicine",
+      "0": "O"
+    },
+    "tags_to_ids": {
+      "B-medicine": 1,
+      "I-medicine": 2,
+      "L-medicine": 3,
+      "U-medicine": 4,
+      "O": 0
+    },
+    "num_tags": 5
+  }
+]

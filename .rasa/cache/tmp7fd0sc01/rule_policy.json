@@ -1,0 +1,34 @@
+{
+  "lookup": {
+    "rules": {
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}]": "action_consult_an_specific_medicine",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}, {\"prev_action\": {\"action_name\": \"action_consult_an_specific_medicine\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}]": "action_save_medicine_reminder",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}, {\"prev_action\": {\"action_name\": \"action_save_medicine_reminder\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]": "action_handle_verifier",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}, {\"prev_action\": {\"action_name\": \"action_handle_verifier\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}]": "action_handle_reminder",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}, {\"prev_action\": {\"action_name\": \"action_handle_reminder\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"tell_time\"}}]": "action_tell_time",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"tell_time\"}}, {\"prev_action\": {\"action_name\": \"action_tell_time\"}, \"user\": {\"intent\": \"tell_time\"}}]": "action_listen"
+    },
+    "rule_only_slots": [],
+    "rule_only_loops": [],
+    "rules_for_loop_unhappy_path": {},
+    "rules_not_in_stories": [
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"tell_time\"}}, {\"prev_action\": {\"action_name\": \"action_tell_time\"}, \"user\": {\"intent\": \"tell_time\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}, {\"prev_action\": {\"action_name\": \"action_handle_verifier\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}, {\"prev_action\": {\"action_name\": \"action_consult_an_specific_medicine\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}, {\"prev_action\": {\"action_name\": \"action_handle_reminder\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}, {\"prev_action\": {\"action_name\": \"action_save_medicine_reminder\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"tell_time\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}]",
+      "predicting default action with intent session_start",
+      "predicting default action with intent restart",
+      "predicting default action with intent back"
+    ]
+  }
+}

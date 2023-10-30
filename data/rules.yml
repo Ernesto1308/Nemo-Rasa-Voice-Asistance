@@ -6,17 +6,35 @@ rules:
   - intent: tell_time
   - action: action_tell_time
 
-- rule: consult medication
+- rule: consult medicine
   steps:
-    - intent: consult_an_specific_medication
-    - action: action_consult_an_specific_medication
+    - intent: consult_an_specific_medicine
+    - action: action_consult_an_specific_medicine
 
 - rule: schedule a reminder
   steps:
-    - intent: save_medication_reminder
-    - action: action_save_medication_reminder
+    - intent: save_medicine_reminder
+    - action: action_save_medicine_reminder
 
 - rule: trigger `action_handle_reminder` for `EXTERNAL_reminder`
   steps:
     - intent: EXTERNAL_reminder
     - action: action_handle_reminder
+
+- rule: active medicine taken form
+  steps:
+    - intent: EXTERNAL_verifier
+    - action: action_set_medicine_taken_slots
+    - action: medicine_taken_form
+    - active_loop: medicine_taken_form
+
+- rule: submit medicine taken form
+  condition:
+  - active_loop: medicine_taken_form
+  steps:
+    - action: medicine_taken_form
+    - active_loop: null
+    - slot_was_set:
+        - requested_slot: null
+    - action: action_update_status
+    - action: utter_ok
