@@ -1,0 +1,8 @@
+{
+  "rule_only_slots": [
+    "medicine_taken"
+  ],
+  "rule_only_loops": [
+    "medicine_taken_form"
+  ]
+}

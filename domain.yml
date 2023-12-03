@@ -11,57 +11,89 @@ intents:
 entities:
 - medicine
 - name
-- medicine_hour
 - time
+- medicine_name
+- medicine_hour
+- medicine_hour_tts
 forms:
   medicine_taken_form:
     required_slots:
-      - medicine_taken
+    - medicine_taken
 slots:
   medicine_taken:
     type: bool
+    influence_conversation: true
+    initial_value: null
     mappings:
-      - type: from_intent
-        intent: affirm
-        value: true
-        conditions:
-          - active_loop: medicine_taken_form
-            requested_slot: medicine_taken
-      - type: from_intent
-        intent: deny
-        value: false
-        conditions:
-          - active_loop: medicine_taken_form
-            requested_slot: medicine_taken
+    - type: from_intent
+      intent: affirm
+      value: true
+      conditions:
+      - active_loop: medicine_taken_form
+        requested_slot: medicine_taken
+    - type: from_intent
+      intent: deny
+      value: false
+      conditions:
+      - active_loop: medicine_taken_form
+        requested_slot: medicine_taken
   time:
     type: list
+    influence_conversation: false
     mappings:
     - type: from_entity
       entity: time
       intent: save_medicine_reminder
   medicines:
     type: list
+    influence_conversation: false
     mappings:
     - type: from_entity
       entity: medicine
-      intent: save_medicine_reminder, consult_an_specific_medicine
-  medicine:
+      intent: save_medicine_reminder
+    - type: from_entity
+      entity: medicine
+      intent: consult_an_specific_medicine
+  medicine_name:
     type: text
+    influence_conversation: false
     mappings:
-    - type: custom
-  medicine_hour_tts:
-    type: text
-    mappings:
-    - type: custom
+    - type: from_entity
+      entity: medicine_name
+      intent: EXTERNAL_reminder
+    - type: from_entity
+      entity: medicine_name
+      intent: EXTERNAL_verifier
+    - type: from_entity
+      entity: medicine_hour_tts
+      intent: EXTERNAL_redefine_verifier
   medicine_hour:
     type: text
+    influence_conversation: false
     mappings:
-    - type: custom
+    - type: from_entity
+      entity: medicine_hour
+      intent: EXTERNAL_verifier
+    - type: from_entity
+      entity: medicine_hour_tts
+      intent: EXTERNAL_redefine_verifier
+  medicine_hour_tts:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: from_entity
+      entity: medicine_hour_tts
+      intent: EXTERNAL_reminder
+    - type: from_entity
+      entity: medicine_hour_tts
+      intent: EXTERNAL_verifier
 responses:
   utter_ok:
   - text: Esta bien.
   utter_ask_medicine_taken:
-  - text: ¿Ya te tomaste {medicine} de {medicine_hour_tts}?
+  - text: ¿Ya te tomaste {medicine_name} de {medicine_hour_tts}?
+  utter_fallback:
+  - text: No sé como responder a tu solicitud.
 actions:
 - utter_ok
 - utter_ask_medicine_taken
@@ -70,7 +102,6 @@ actions:
 - action_consult_medicines
 - action_save_medicine_reminder
 - action_handle_reminder
-- action_set_medicine_taken_slots
 - action_update_status
 session_config:
   session_expiration_time: 0

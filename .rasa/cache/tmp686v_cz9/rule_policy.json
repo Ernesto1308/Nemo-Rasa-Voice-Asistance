@@ -1,0 +1,47 @@
+{
+  "lookup": {
+    "rules": {
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"medicine_taken_form\"}}]": "action_update_status",
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"medicine_taken_form\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"action_update_status\"}}]": "utter_ok",
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"medicine_taken_form\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"action_update_status\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"utter_ok\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}]": "action_handle_reminder",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}, {\"prev_action\": {\"action_name\": \"action_handle_reminder\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}]": "action_save_medicine_reminder",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}, {\"prev_action\": {\"action_name\": \"action_save_medicine_reminder\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"tell_time\"}}]": "action_tell_time",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"tell_time\"}}, {\"prev_action\": {\"action_name\": \"action_tell_time\"}, \"user\": {\"intent\": \"tell_time\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]": "action_set_medicine_taken_slots",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}, {\"prev_action\": {\"action_name\": \"action_set_medicine_taken_slots\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]": "medicine_taken_form",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}, {\"prev_action\": {\"action_name\": \"action_set_medicine_taken_slots\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}, {\"active_loop\": {\"name\": \"medicine_taken_form\"}, \"prev_action\": {\"action_name\": \"medicine_taken_form\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]": "action_listen",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}]": "action_consult_an_specific_medicine",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}, {\"prev_action\": {\"action_name\": \"action_consult_an_specific_medicine\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}]": "action_listen"
+    },
+    "rule_only_slots": [],
+    "rule_only_loops": [
+      "medicine_taken_form"
+    ],
+    "rules_for_loop_unhappy_path": {
+      "[{\"prev_action\": {\"action_name\": \"action_set_medicine_taken_slots\"}}, {\"active_loop\": {\"name\": \"medicine_taken_form\"}, \"prev_action\": {\"action_name\": \"medicine_taken_form\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]": "do_not_predict_loop_action"
+    },
+    "rules_not_in_stories": [
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}, {\"prev_action\": {\"action_name\": \"action_consult_an_specific_medicine\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}, {\"prev_action\": {\"action_name\": \"action_handle_reminder\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}]",
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"medicine_taken_form\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"action_update_status\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"utter_ok\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"tell_time\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}, {\"prev_action\": {\"action_name\": \"action_set_medicine_taken_slots\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}, {\"prev_action\": {\"action_name\": \"action_save_medicine_reminder\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_reminder\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"tell_time\"}}, {\"prev_action\": {\"action_name\": \"action_tell_time\"}, \"user\": {\"intent\": \"tell_time\"}}]",
+      "handling active loops and forms - medicine_taken_form",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"EXTERNAL_verifier\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"save_medicine_reminder\"}}]",
+      "predicting default action with intent restart",
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"medicine_taken_form\"}}, {\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"action_update_status\"}}]",
+      "[{\"prev_action\": {\"action_name\": \"action_listen\"}, \"user\": {\"intent\": \"consult_an_specific_medicine\"}}]",
+      "handling active loops and forms - medicine_taken_form - action_listen",
+      "predicting default action with intent session_start",
+      "predicting default action with intent back",
+      "[{\"active_loop\": {\"name\": \"should_not_be_set\"}, \"prev_action\": {\"action_name\": \"medicine_taken_form\"}}]"
+    ]
+  }
+}

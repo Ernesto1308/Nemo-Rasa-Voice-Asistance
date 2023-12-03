@@ -1,18 +1,22 @@
 # This files contains your custom actions which can be used to run
 # custom Python code.
-from datetime import datetime, timedelta
-from typing import Any, Text, Dict, List, Union
+from datetime import datetime
+from datetime import timedelta
+from typing import Any, Text, Dict
+from typing import List
 
 import spacy
 from rasa_sdk import Action, Tracker
-from rasa_sdk.events import SlotSet
+from rasa_sdk.events import SlotSet, ReminderScheduled
 from rasa_sdk.executor import CollectingDispatcher
 
-from acces_data_layer.models.models import RelOldPersonMedicine
+from acces_data_layer.models.models import RelOlderPersonMedicine
 from acces_data_layer.services.medicine_service import select_by_name
-from acces_data_layer.services.r_old_person_medicine_service import (select_by_ids_hour, select_by_id_op_hour,
-                                                                     insert, update)
-from actions import numbers
+from acces_data_layer.services.r_older_person_medicine_service import (select_by_ids_major_hour,
+                                                                       get_medicine_schedule,
+                                                                       select_by_ids_hour,
+                                                                       insert, update)
+from utils import numbers
 
 
 def tell_time(hour_to_convert: datetime) -> str:
@@ -25,33 +29,43 @@ def tell_time(hour_to_convert: datetime) -> str:
     Returns:
         A string expressing the time in Spanish using common conventions.
     """
-
-    # handle hours mayor than 12
-    if hour_to_convert.hour > 12:
-        current_hour = hour_to_convert.hour - 12
-    # handle hour 0
-    elif hour_to_convert.hour == 0:
-        current_hour = 12
-    else:
-        current_hour = hour_to_convert.hour
-
+    part_of_day = get_part_of_day(hour_to_convert)
+    current_hour = int(hour_to_convert.strftime('%I'))
     current_minute = hour_to_convert.minute
-    meridiem = hour_to_convert.strftime('%p')
-    time_of_day = 'mañana' if meridiem == 'AM' and current_hour != 12 else 'tarde' if current_hour < 7 else 'noche'
+    current_minutes_str = ''
 
-    # handle edge cases for hours 1 and o'clock
-    if current_hour == 1 and current_minute == 0:
-        hour_to_string = f'la una de la {time_of_day}'
-    elif current_hour == 1:
-        hour_to_string = f'la una y {numbers[current_minute]} de la {time_of_day}'
-    # handle case for o'clock
-    elif current_minute == 0:
-        hour_to_string = f'las {numbers[current_hour]} de la {time_of_day}'
-    # handle cases for minutes past the hour
+    if current_minute != 0:
+        current_minutes_str = f' y {numbers[current_minute]}'
+
+    if current_hour != 1:
+        current_hour_str = f'las {numbers[current_hour]}'
     else:
-        hour_to_string = f'las {numbers[current_hour]} y {numbers[current_minute]} de la {time_of_day}'
+        current_hour_str = 'la una'
 
-    return hour_to_string
+    return f'{current_hour_str}{current_minutes_str}{part_of_day}'
+
+
+def get_part_of_day(hour: datetime) -> str:
+    """
+        Get the time of day in Spanish based on the hour of the day.
+        Args:
+            hour: The datetime object with the hour to convert.
+        Returns:
+            A string expressing the time of day in Spanish.
+    """
+    current_hour = hour.hour
+
+    # Determine the time of day based on the hour
+    if 0 < current_hour < 12:
+        part_of_day = ' de la mañana'
+    elif 12 < current_hour < 19:
+        part_of_day = ' de la tarde'
+    elif current_hour >= 19 or current_hour == 0:
+        part_of_day = ' de la noche'
+    else:
+        part_of_day = ' del mediodia'
+
+    return part_of_day
 
 
 def get_gender(noun: str) -> str:
@@ -70,69 +84,120 @@ def get_gender(noun: str) -> str:
     nlp = spacy.load("es_core_news_sm")
     doc = nlp(noun)
     token = doc[0]
-
-    gender = token.morph.get("Gender")
+    result = token.morph.get("Gender")
+    gender = result[0] if result else None
 
     return gender
 
 
-def sentence_builder(
-        dict_message: dict,
-        index_value: str,
-        medicine: str,
-        medication_hour: List = None
-) -> dict:
+def article_to_medicine(medicine: str) -> str:
     """
-    Constructs a phrase in Spanish mentioning a medicine and when to take it.
+    Prefix the article for a given medicine name.
 
     Args:
-        dict_message: The name of the medicine.
-        index_value: The name of the medicine.
         medicine: The name of the medicine.
-        medication_hour: The date and time when the medicine should be taken.
 
     Returns:
-        The initial message string with an additional phrase appended
-        mentioning the medicine name, time to take it, and proper Spanish
-        gender article.
+        The article and medicine name concatenated.
     """
-    gender = get_gender(medicine)
-    article = "" if not gender else "la " if gender == "Fem" else "el "
-    amount_medicines = len(medication_hour)
-
-    if index_value == "take":
-        for i, med in enumerate(medication_hour, start=1):
-            if 1 < i < amount_medicines:
-                dict_message[index_value][medicine] += f", a {tell_time(med)}"
-            elif i == 1:
-                if dict_message[index_value]:
-                    dict_message[index_value][medicine] = f"{article}{medicine} a {tell_time(med)}"
-                else:
-                    dict_message[index_value][medicine] = f"Tienes que tomar {article}{medicine} a {tell_time(med)}"
-            else:
-                dict_message[index_value][medicine] += f" y a {tell_time(med)}"
+    if get_gender(medicine) == 'Fem':
+        article = 'la '
+    elif get_gender(medicine) == 'Masc':
+        article = 'el '
     else:
-        if dict_message[index_value]:
-            dict_message[index_value] += f", ni {medicine}"
-        elif index_value == "not_take":
-            dict_message[index_value] = f"No tines que tomar {medicine}"
-        else:
-            dict_message[index_value] = f"No conozco la medicina {medicine}"
+        article = ''
 
-    return dict_message
+    return f'{article}{medicine}'
 
 
-def sentence_finisher(sentences: Union[dict, str]) -> str:
-    message = ""
-    length = len(sentences)
+def format_list_naturally(list_items: List[str]) -> str:
+    """
+    Formats a list of strings to a string where the items are naturally joined with commas and 'y'.
 
-    for i, sentence in enumerate(iterable=sentences.values(), start=1):
-        if i != length:
-            message += f"{sentence}, "
-        elif length == 1:
-            message = f"{sentence}."
-        else:
-            message += f"y {sentence}"
+    Args:
+        list_items: A list of strings to be formatted.
+
+    Returns:
+        A string with joined list items in a naturally readable format in Spanish.
+
+    Usage:
+        format_list_naturally(['8 de la mañana', '2 de la tarde', '6 de la tarde'])
+        '8 de la mañana, 2 de la tarde y 6 de la tarde'
+    """
+    length = len(list_items)
+
+    if length > 2:
+        formatted_string = f"{', '.join(list_items[:-1])} y {list_items[-1]}"
+    elif length == 2:
+        formatted_string = ' y '.join(list_items)
+    else:
+        formatted_string = list_items[0]
+
+    return formatted_string
+
+
+def create_single_medicine_phrase(medicine: str, hours: List[datetime]) -> str:
+    """
+    Constructs a natural language phrase in Spanish stating when to take a specific medicine.
+
+    Args:
+        medicine: The name of the medicine.
+        hours: A list of datetime objects indicating when the medicine should be taken.
+
+    Returns:
+        A string formatted in a human-like style in Spanish telling when to take the given medicine.
+
+    Usage:
+        create_take_medicine_phrase('Paracetamol', [datetime(2022,6,1,8), datetime(2022,6,1,14), datetime(2022,6,1,18)])
+        "Tienes que tomar el Paracetamol a las 8 de la mañana, a las 2 de la tarde y a las 6 de la tarde."
+    """
+    medicine = article_to_medicine(medicine)
+    formatted_hours = [f'a {tell_time(hour)}' for hour in hours]
+    formatted_hours_string = format_list_naturally(formatted_hours)
+    phrase = f'{medicine} {formatted_hours_string}'
+
+    return phrase
+
+
+def create_combined_medicine_phrase(single_medicine_phrases: List[str]) -> str:
+    """
+    Constructs a natural language phrase in Spanish stating when to take multiple medicines.
+
+    Args:
+        single_medicine_phrases: A list of string with all the information.
+
+    Returns:
+        A string formatted in a human-like style in Spanish telling when to take the given medicines.
+
+    Usage: create_combined_medicine_phrase([ 'el Paracetamol a las 8 de la mañana, a las 2 de la tarde y a las 6 de
+    la tarde', 'la Duralgina a las 8 de la día, a las 2 de la tarde y a las 6 de la tarde']) "Tienes que tomar el
+    Paracetamol a las 8 de la mañana, a las 2 de la tarde y a las 6 de la tarde y Duralgina a las 8 de la mañana,
+    a las 2 de la tarde y a las 6 de la tarde."
+    """
+    phrase = f'Tienes que tomar {format_list_naturally(single_medicine_phrases)}'
+    return phrase
+
+
+def create_not_take_phrase(medicines: List[str]) -> str:
+    """
+        Formats a list of strings to a string where the items are naturally joined with commas and 'ni'.
+
+        Args:
+            medicines: A list with the names of the medicines.
+
+        Returns:
+            A string with joined list items in a naturally readable format in Spanish.
+
+        Usage:
+            format_list_naturally(['Paracetamol', 'Duralgina', 'Ibuprofeno'])
+            'No tienes que tomar Paracetamol, ni Duralgina, ni Ibuprofeno'
+        """
+    length = len(medicines)
+
+    message = f"No tienes que tomar {medicines[0]}"
+
+    if length > 1:
+        message += f"{', ni '.join(medicines[1:])}"
 
     return message
 
@@ -156,13 +221,11 @@ class ActionSpecificMedication(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        id_old_person = int(tracker.sender_id)
+        id_older_person = int(tracker.sender_id)
         current_medicines = tracker.get_slot("medicines")
-        dict_message = {
-            "take": {},
-            "not_take": '',
-            "unknown": ''
-        }
+        messages_list = []
+        message_not_take = []
+        message = ''
 
         if current_medicines:
             for medicine in current_medicines:
@@ -170,38 +233,29 @@ class ActionSpecificMedication(Action):
 
                 if id_medicine:
                     current_hour = datetime.now()
-                    medication_hour = select_by_ids_hour(id_op=id_old_person, id_med=id_medicine, hour=current_hour)
-
+                    medication_hour = select_by_ids_major_hour(id_op=id_older_person, id_med=id_medicine,
+                                                               hour=current_hour)
                     if medication_hour:
-                        dict_message = sentence_builder(
-                            dict_message=dict_message,
-                            index_value="take",
-                            medicine=medicine,
-                            medication_hour=medication_hour
+                        messages_list.append(
+                            create_single_medicine_phrase(medicine=medicine, hours=medication_hour)
                         )
                     else:
-                        dict_message = sentence_builder(
-                            dict_message=dict_message,
-                            index_value="not_take",
-                            medicine=medicine
-                        )
+                        message_not_take.append(medicine)
                 else:
-                    dict_message = sentence_builder(
-                        dict_message=dict_message,
-                        index_value="unknown",
-                        medicine=medicine
-                    )
+                    message = 'No conozco esa medicina'
 
-            message = sentence_finisher(sentences=dict_message["take"])
-
-            message += dict_message["not_take"]
-            message += dict_message["unknown"]
         else:
-            message = f"No conozco esa medicina."
+            message = "No conozco esa medicina."
+
+        if messages_list:
+            message = create_combined_medicine_phrase(messages_list)
+
+        if message_not_take:
+            message += create_not_take_phrase(message_not_take)
 
         dispatcher.utter_message(text=message)
 
-        return [SlotSet("medicines", None)]
+        return []
 
 
 class ActionConsultMedications(Action):
@@ -211,25 +265,18 @@ class ActionConsultMedications(Action):
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        id_old_person = int(tracker.sender_id)
-        dict_message = {
-            "take": {}
-        }
+        id_older_person = int(tracker.sender_id)
         current_hour = datetime.now()
         end_hour = current_hour + timedelta(hours=12)
-        current_medicines = select_by_id_op_hour(
-            id_op=id_old_person, start_hour=current_hour, end_hour=end_hour
+        current_medicines = get_medicine_schedule(
+            id_op=id_older_person, start_hour=current_hour, end_hour=end_hour
         )
+        message_list = []
 
-        for medicine, medication_hour in current_medicines:
-            dict_message = sentence_builder(
-                dict_message=dict_message,
-                index_value="take",
-                medicine=medicine,
-                medication_hour=[medication_hour]
-            )
+        for medicine, medication_hour in current_medicines.items():
+            message_list.append(create_single_medicine_phrase(medicine=medicine, hours=medication_hour))
 
-        message = sentence_finisher(sentences=dict_message["take"])
+        message = create_combined_medicine_phrase(message_list)
 
         dispatcher.utter_message(text=message)
 
@@ -238,30 +285,68 @@ class ActionConsultMedications(Action):
 
 class ActionSaveMedication(Action):
     def name(self) -> Text:
-        return "action_save_medication_reminder"
+        return "action_save_medicine_reminder"
 
     def run(self, dispatcher: CollectingDispatcher,
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        id_old_person = int(tracker.sender_id)
+        id_older_person = int(tracker.sender_id)
         medicines = tracker.get_slot("medicines")
         times = tracker.get_slot("time")
+        before_reminder = {}
+        in_time_reminder = {}
+        verifier = {}
 
         for i, medicine in enumerate(iterable=medicines):
-            id_medication = select_by_name(medicine_name=medicine)
-            time_object = datetime.strptime(times[i], "%Y-%m-%dT%H:%M:%S")
+            id_medicine = select_by_name(medicine_name=medicine)
+            time_object = datetime.strptime(times[i], '%Y-%m-%dT%H:%M:%S.%f%z').replace(microsecond=0, tzinfo=None)
+            time_object_str = time_object.isoformat()
+            time_object_tts = tell_time(hour_to_convert=time_object)
 
             insert(
-                op_med_data=RelOldPersonMedicine(
-                    id_old_person=id_old_person,
-                    id_medicine=id_medication,
+                RelOlderPersonMedicine(
+                    id_older_person=id_older_person,
+                    id_medicine=id_medicine,
                     medicine_hour=time_object
                 )
             )
 
+            before_reminder = ReminderScheduled(
+                intent_name="EXTERNAL_reminder",
+                entities={
+                    "medicine_name": medicine,
+                    "medicine_hour_tts": time_object_tts,
+                },
+                trigger_date_time=time_object - timedelta(seconds=10),
+                name=f'reminder {id_older_person}-{medicine}-{time_object_str}',
+                kill_on_user_message=False,
+            )
+
+            in_time_reminder = ReminderScheduled(
+                intent_name="EXTERNAL_reminder",
+                entities={
+                    "medicine_name": medicine,
+                },
+                trigger_date_time=time_object,
+                name=f'reminder {id_older_person}-{medicine}',
+                kill_on_user_message=False,
+            )
+
+            verifier = ReminderScheduled(
+                intent_name="EXTERNAL_verifier",
+                entities={
+                    "medicine_name": medicine,
+                    "medicine_hour": time_object_str,
+                    "medicine_hour_tts": time_object_tts,
+                },
+                trigger_date_time=time_object + timedelta(seconds=10),
+                name=f'verifier {id_older_person}-{medicine}-{time_object_str}',
+                kill_on_user_message=False,
+            )
+
         dispatcher.utter_message(text="Te lo recordaré")
 
-        return [SlotSet("medicines", None), SlotSet("time", None)]
+        return [before_reminder, in_time_reminder, verifier]
 
 
 class ActionHandleReminder(Action):
@@ -272,33 +357,18 @@ class ActionHandleReminder(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         print("Action Handle Reminder")
-        medicine = next(tracker.get_latest_entity_values("medicine"), "algo")
-        medicine_hour_str = next(tracker.get_latest_entity_values("medicine_hour"), "en algun momento")
-        medicine_hour = datetime.strptime(medicine_hour_str, "%Y-%m-%dT%H:%M:%S")
+        print(tracker.slots)
+        medicine_name = tracker.get_slot("medicine_name")
+        medicine_hour_tts = tracker.get_slot("medicine_hour_tts")
 
-        dispatcher.utter_message(text=f"Recuerda tomar {medicine} a {tell_time(hour_to_convert=medicine_hour)}")
+        if medicine_hour_tts:
+            message = f"Recuerda tomar {medicine_name} a {medicine_hour_tts}"
+        else:
+            message = f"Recuerda tomar {medicine_name} ahora"
 
-        return [SlotSet("medicines", None), SlotSet("medicine", None), SlotSet("medicine_hour", None)]
+        dispatcher.utter_message(text=message)
 
-
-class ActionHandleVerifier(Action):
-    def name(self) -> Text:
-        return "action_set_medicine_taken_slots"
-
-    def run(self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        print("Action Set Slots")
-        medicine_hour_str = next(tracker.get_latest_entity_values("medicine_hour"), "en algun momento")
-        medicine_name = next(tracker.get_latest_entity_values("medicine"), "algo")
-        medicine_hour = datetime.strptime(medicine_hour_str, "%Y-%m-%dT%H:%M:%S")
-        medicine_hour_tts = tell_time(medicine_hour)
-
-        return [
-            SlotSet("medicine", medicine_name),
-            SlotSet("medicine_hour_tts", medicine_hour_tts),
-            SlotSet("medicine_hour", medicine_hour_str)
-        ]
+        return [SlotSet("medicine_hour_tts", None)]
 
 
 class ActionUpdateStatus(Action):
@@ -309,29 +379,22 @@ class ActionUpdateStatus(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         print("Action Update Status")
-        id_old_person = int(tracker.sender_id)
+        id_older_person = int(tracker.sender_id)
+        medicine_taken = tracker.get_slot("medicine_taken")
         medicine_hour_str = tracker.get_slot("medicine_hour")
         medicine_hour = datetime.strptime(medicine_hour_str, "%Y-%m-%dT%H:%M:%S")
-        medicine_name = tracker.get_slot("medicine")
+        medicine_name = tracker.get_slot("medicine_name")
         id_medicine = select_by_name(medicine_name=medicine_name)
-        relation = {
-            "current_state": {
-                "id_old_person": id_old_person,
-                "id_medicine": id_medicine,
-                "medicine_hour": medicine_hour
-            },
-            "next_state": {
-                "id_old_person": id_old_person,
-                "id_medicine": id_medicine,
-                "medicine_hour": medicine_hour,
-                "status": "completado"
-            }
-        }
+        status = "Completado" if medicine_taken else "No completado"
+        print(id_older_person, medicine_taken, medicine_name, medicine_hour)
+        relation = select_by_ids_hour(id_op=id_older_person, id_med=id_medicine, hour=medicine_hour)
+        relation.status = status
 
-        update(op_med=relation)
+        update(relation)
 
         return [
-            SlotSet("medicine", None),
+            SlotSet("medicine_name", None),
             SlotSet("medicine_hour_tts", None),
-            SlotSet("medicine_hour", None)
+            SlotSet("medicine_hour", None),
+            SlotSet("medicine_taken", None)
         ]

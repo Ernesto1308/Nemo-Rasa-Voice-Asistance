@@ -1,31 +1,30 @@
-from typing import List, Any
+from typing import List
 
 from sqlalchemy import select
 
 from acces_data_layer.models.models import Medicine
-from acces_data_layer.services import Session
+from acces_data_layer import db_session
 
 
-def insert(medicine_data: Any) -> None:
+def insert(medicine: Medicine) -> None:
     """
     Inserts a new medicine into the database.
 
     Args:
-        medicine_data: The Medicine object to insert
+        medicine: The Medicine object to insert
 
     Returns:
         None
 
     Description:
-        Opens a SQLAlchemy Session. Adds the Medicine object.
+        Opens a SQLAlchemy db_session. Adds the Medicine object.
         Commits change to persist in the database.
     """
-    medicine = Medicine(**medicine_data)
-    Session.add(medicine)
-    Session.commit()
+    db_session.add(medicine)
+    db_session.commit()
 
 
-def select_all() -> List[dict]:
+def select_all() -> List[Medicine]:
     """
     Gets all medicines from the database.
 
@@ -36,16 +35,17 @@ def select_all() -> List[dict]:
         medicines: List of Medicine objects
 
     Description:
-        Opens a SQLAlchemy Session. Queries for all Medicine rows.
+        Opens a SQLAlchemy db_session. Queries for all Medicine rows.
         Returns them in a list.
     """
-    medicines = Session.scalars(select(Medicine)).all()
-    medicines_dict = [medicine.to_dict() for medicine in medicines]
+    medicines = db_session.scalars(
+        select(Medicine)
+    ).all()
 
-    return medicines_dict
+    return medicines
 
 
-def select_by_id(id_medicine: int) -> dict:
+def select_by_id(id_medicine: int) -> Medicine:
     """
     Gets a medicine by ID.
 
@@ -55,9 +55,10 @@ def select_by_id(id_medicine: int) -> dict:
     Returns:
         medicine: The Medicine object found
     Description:
-    Opens a SQLAlchemy Session. Queries for Medicines Medicine if found, otherwise returns None.
+    Opens a SQLAlchemy db_session. Queries for Medicines Medicine if found, otherwise returns None.
 """
-    medicine = Session.get(Medicine, id_medicine).to_dict()
+    medicine = db_session.get(Medicine, id_medicine)
+
     return medicine
 
 
@@ -71,33 +72,31 @@ def select_by_name(medicine_name: str) -> int:
     Returns:
         medicine: The Medicine object not found
     Description:
-    Opens a SQLAlchemy Session. Queries for Medicines if found, otherwise returns None.
+    Opens a SQLAlchemy db_session. Queries for Medicines if found, otherwise returns None.
 """
-    result = Session.scalars(
+    result = db_session.scalars(
          select(Medicine).filter_by(medicine_name=medicine_name).limit(1)
     ).first()
 
     return result.id_medicine if result else None
 
 
-def update(medicine_data: Any):
+def update(medicine: Medicine):
     """
     Updates an existing medicine.
 
     Args:
-        medicine_data: The Medicine object to update
+        medicine: The Medicine object to update
 
     Returns:
         None
 
     Description:
-        Opens SQLAlchemy Session. Gets existing Medicine by ID.
+        Opens SQLAlchemy db_session. Gets existing Medicine by ID.
         Sets its fields to the passed Medicine object. Commits changes.
     """
-    medicine = Medicine(**medicine_data)
-    current_medicine = Session.get(Medicine, medicine.id_medicine)
-    current_medicine.medicine_name = medicine.medicine_name
-    Session.commit()
+    db_session.merge(medicine)
+    db_session.commit()
 
 
 def delete(id_medicine: int):
@@ -111,9 +110,9 @@ def delete(id_medicine: int):
         None
 
     Description:
-        Opens SQLAlchemy Session. Gets existing Medicine by ID.
-        Deletes from Session. Commits changes.
+        Opens SQLAlchemy db_session. Gets existing Medicine by ID.
+        Deletes from db_session. Commits changes.
     """
-    medicine = Session.get(Medicine, id_medicine)
-    Session.delete(medicine)
-    Session.commit()
+    medicine = db_session.get(Medicine, id_medicine)
+    db_session.delete(medicine)
+    db_session.commit()

@@ -10,9 +10,17 @@ nlu:
   examples: |
     - ¿A qué hora tengo que tomarme el [Paracetamol](medicine)?
     - ¿A qué hora tengo que tomarme la [Duralgina](medicine)?
-    - ¿A qué hora tengo que tomarme la [Venadrilina](medicine)?
     - ¿A qué hora tengo que tomarme el [Ibuprofeno](medicine)?
     - ¿A qué hora tengo que tomarme el [Paracetamol](medicine), la [Duralgina](medicine) y el [Ibuprofeno](medicine)?
+- intent: save_medicine_reminder
+  examples: |
+    - Recuerdame que tengo que tomarme el [Paracetamol](medicine) a las 10 de la mañana
+    - Tengo que tomarme la [Duralgina](medicine) a las 3 y 30 de la tarde, recuerdamelo
+    - Recuerdame que tengo que tomarme la [Duralgina](medicine) a las 8
+    - Recuerdame que tengo que tomarme la [Paracetamol](medicine) a las 10 en punto
+    - Recuerdame que tengo que tomarme el [Paracetamol](medicine) a las 10 menos cuarto de la mañana
+    - Recuerdame que tengo que tomarme el [Paracetamol](medicine) a las 12 y 55
+    - Recuerdame que tengo que tomarme el [Paracetamol](medicine) a las 6 y 58
 - intent: tell_time
   examples: |
     - Dime la hora
@@ -21,17 +29,9 @@ nlu:
     - me puedes decir la hora
     - hora
     - dime la hora
-- intent: save_medicine_reminder
-  examples: |
-    - Recuerdame que tengo que tomarme el [Paracetamol](medicine) a las 10 de la mañana
-    - Tengo que tomarme la [Duralgina](medicine) a las 3 y 30 de la tarde, recuerdamelo
-    - Recuerdame que tengo que tomarme la [Duralgina](medicine) a las 8
-    - Recuerdame que tengo que tomarme la [Paracetamol](medicine) a las 10 en punto
-    - Recuerdame que tengo que tomarme el [Paracetamol](medicine) a las 10 menos cuarto de la mañana
 - intent: affirm
   examples: |
     - Si
-    - Esta bien
     - Ya me lo tomé
     - Ya me tome la pastilla
 - intent: deny
@@ -40,8 +40,12 @@ nlu:
     - no es necesario
     - no hace falta
     - No me la he tomado
+    - No, no me lo tomé
     - No lo he hecho
     - No me he tomado la pastilla
+- synonym: Paracetamol
+  examples: |
+    - paracetamol
 - synonym: medicamento
   examples: |
     - pastilla

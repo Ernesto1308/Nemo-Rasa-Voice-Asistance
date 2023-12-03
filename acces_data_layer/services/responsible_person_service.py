@@ -1,42 +1,41 @@
 # This file contains the operations CRUD for the table `responsible_person`.
-from typing import List, Any
+from typing import List
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
 
+from acces_data_layer import db_session
 from acces_data_layer.models.models import ResponsiblePerson
-from acces_data_layer.services import engine
 
 
-def insert(resp_person_data: Any):
+def insert(resp_person: ResponsiblePerson):
     """
     Inserts a new responsible person into the database.
 
     Args:
-      resp_person_data: The responsible person to insert.
+      resp_person: The responsible person to insert.
 
     Returns:
       None.
     """
-    with Session(engine) as session:
-        resp_person = ResponsiblePerson(**resp_person_data)
-        session.add(resp_person)
-        session.commit()
+    db_session.add(resp_person)
+    db_session.commit()
 
 
-def select_all() -> List[dict]:
+def select_all() -> List[ResponsiblePerson]:
     """
     Returns all the responsible persons from the database.
 
     Returns:
       A list of responsible persons.
     """
-    with Session(engine) as session:
-        resp_persons = session.query(ResponsiblePerson).all()
-        resp_persons_dict = [resp_person.to_dict() for resp_person in resp_persons]
-        return resp_persons_dict
+    resp_persons = db_session.scalars(
+        select(ResponsiblePerson)
+    ).all()
+
+    return resp_persons
 
 
-def select_by_id(id_resp_person: int) -> dict:
+def select_by_id(id_resp_person: int) -> ResponsiblePerson:
     """
     Returns the responsible person with the given ID.
 
@@ -46,26 +45,22 @@ def select_by_id(id_resp_person: int) -> dict:
     Returns:
       The responsible person with the given ID, or `None` if no responsible person with that ID is found.
     """
-    with Session(engine) as session:
-        resp_person = session.get(ResponsiblePerson, id_resp_person).to_dict()
-        return resp_person
+    resp_person = db_session.get(ResponsiblePerson, id_resp_person)
+    return resp_person
 
 
-def update(resp_person_data: Any):
+def update(resp_person: ResponsiblePerson):
     """
     Updates a responsible person in the database.
 
     Args:
-      resp_person_data: The responsible person to update.
+      resp_person: The responsible person to update.
 
     Returns:
       None.
     """
-    with Session(engine) as session:
-        resp_person = ResponsiblePerson(**resp_person_data)
-        current_person = session.get(ResponsiblePerson, resp_person.id_responsible_person)
-        current_person.responsible_person_name = resp_person.responsible_person_name
-        session.commit()
+    db_session.merge(resp_person)
+    db_session.commit()
 
 
 def delete(id_resp_person: int):
@@ -78,7 +73,7 @@ def delete(id_resp_person: int):
     Returns:
       None.
     """
-    with Session(engine) as session:
-        resp_person = session.get(ResponsiblePerson, id_resp_person)
-        session.delete(resp_person)
-        session.commit()
+
+    resp_person = db_session.get(ResponsiblePerson, id_resp_person)
+    db_session.delete(resp_person)
+    db_session.commit()

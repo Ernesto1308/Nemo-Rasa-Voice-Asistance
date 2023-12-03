@@ -6,10 +6,15 @@ rules:
   - intent: tell_time
   - action: action_tell_time
 
-- rule: consult medicine
+- rule: consult an specific medicine
   steps:
     - intent: consult_an_specific_medicine
     - action: action_consult_an_specific_medicine
+
+- rule: consult medicines
+  steps:
+    - intent: consult_medicines
+    - action: action_consult_medicines
 
 - rule: schedule a reminder
   steps:
@@ -24,13 +29,12 @@ rules:
 - rule: active medicine taken form
   steps:
     - intent: EXTERNAL_verifier
-    - action: action_set_medicine_taken_slots
     - action: medicine_taken_form
     - active_loop: medicine_taken_form
 
 - rule: submit medicine taken form
   condition:
-  - active_loop: medicine_taken_form
+    - active_loop: medicine_taken_form
   steps:
     - action: medicine_taken_form
     - active_loop: null
@@ -38,3 +42,8 @@ rules:
         - requested_slot: null
     - action: action_update_status
     - action: utter_ok
+
+- rule: telling the user that the assistent do not know how to manage the request
+  steps:
+    - intent: nlu_fallback
+    - action: utter_fallback

@@ -4,7 +4,7 @@ import threading
 import nemo.collections.asr as nemo_asr
 from flask import Flask, request
 
-from acces_data_layer.services import old_person_service
+from acces_data_layer.services import older_person_service
 from utils import write_audio, time
 
 app = Flask(__name__)
